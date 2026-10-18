@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seventy-Five Days</title>
+<meta name="description" content="One quest set a day. Seventy-five days. Nothing leaves this device.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..600,0;1,9..144,300..600,0&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23c2822a'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f5efe4;
+    --bg-deep: #ede5d6;
+    --card: #fdf9f1;
+    --ink: #1d1a16;
+    --ink-soft: #4a433b;
+    --muted: #857a6d;
+    --line: rgba(29, 26, 22, 0.12);
+    --line-strong: rgba(29, 26, 22, 0.28);
+    --accent: #b97a25;
+    --accent-soft: rgba(185, 122, 37, 0.14);
+    --shadow: 0 1px 0 rgba(29,26,22,0.04), 0 12px 40px -24px rgba(29,26,22,0.35);
+    --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121010;
+      --bg-deep: #0c0b0a;
+      --card: #1a1715;
+      --ink: #efe6d8;
+      --ink-soft: #c9bfb0;
+      --muted: #8f8477;
+      --line: rgba(239, 230, 216, 0.11);
+      --line-strong: rgba(239, 230, 216, 0.3);
+      --accent: #d9a04a;
+      --accent-soft: rgba(217, 160, 74, 0.16);
+      --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 16px 48px -28px rgba(0,0,0,0.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121010;
+    --bg-deep: #0c0b0a;
+    --card: #1a1715;
+    --ink: #efe6d8;
+    --ink-soft: #c9bfb0;
+    --muted: #8f8477;
+    --line: rgba(239, 230, 216, 0.11);
+    --line-strong: rgba(239, 230, 216, 0.3);
+    --accent: #d9a04a;
+    --accent-soft: rgba(217, 160, 74, 0.16);
+    --shadow: 0 1px 0 rgba(0,0,0,0.3), 0 16px 48px -28px rgba(0,0,0,0.9);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image: radial-gradient(1200px 600px at 50% -200px, var(--card), transparent 70%);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  ::selection { background: var(--accent-soft); }
+
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px calc(48px + env(safe-area-inset-bottom));
+  }
+
+  /* progress rule */
+  .rule {
+    display: grid;
+    grid-template-columns: repeat(75, 1fr);
+    gap: 2px;
+    padding-top: calc(14px + env(safe-area-inset-top));
+    height: 20px;
+  }
+  .rule i {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--line);
+    transition: background .6s ease, transform .6s ease;
+  }
+  .rule i.past { background: var(--line-strong); }
+  .rule i.now  { background: var(--accent); transform: scaleY(1.9); }
+  .rule i.now.done { animation: glow 1.4s ease-out 1; }
+  @keyframes glow {
+    0%   { box-shadow: 0 0 0 0 var(--accent-soft); }
+    60%  { box-shadow: 0 0 0 10px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    color: var(--muted);
+  }
+  .top .meta { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .top .meta span + span::before { content: "·"; margin-right: 10px; opacity: .6; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border: 0; background: transparent; border-radius: 999px;
+    display: grid; place-items: center; cursor: pointer;
+    color: var(--muted);
+    transition: background .2s, color .2s;
+    margin-right: -10px;
+  }
+  .icon-btn:hover { background: var(--accent-soft); color: var(--ink); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* day header */
+  .day {
+    margin-top: 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .num {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-variation-settings: "opsz" 144, "SOFT" 0;
+    font-size: clamp(112px, 30vw, 184px);
+    line-height: .82;
+    letter-spacing: -0.045em;
+    margin-left: -0.04em;
+    color: var(--ink);
+    transition: color 1.2s ease;
+    font-feature-settings: "lnum", "pnum";
+  }
+  .done .num { color: var(--accent); }
+  .of {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 22px;
+    color: var(--muted);
+    letter-spacing: -0.01em;
+  }
+  .sub {
+    margin-top: 18px;
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 44ch;
+    letter-spacing: -0.005em;
+  }
+  .sub b { font-weight: 500; color: var(--ink); }
+  .complete-line {
+    margin-top: 14px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--accent);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 1s ease .3s, transform 1s ease .3s;
+    height: 0;
+    overflow: hidden;
+  }
+  .done .complete-line { opacity: 1; transform: none; height: auto; }
+
+  /* cards */
+  .cards { margin-top: 34px; display: grid; gap: 14px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 20px 20px 18px;
+    box-shadow: var(--shadow);
+  }
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .label small { font-weight: 500; letter-spacing: .02em; text-transform: none; font-size: 11.5px; opacity: .85; }
+
+  .q {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 6px 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .q input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .box {
+    width: 24px; height: 24px; margin-top: 1px;
+    border-radius: 7px;
+    border: 1.5px solid var(--line-strong);
+    display: grid; place-items: center;
+    background: transparent;
+    transition: background .25s ease, border-color .25s ease, transform .18s ease;
+  }
+  .q:active .box { transform: scale(.92); }
+  .box svg { width: 15px; height: 15px; }
+  .box path {
+    fill: none;
+    stroke: var(--card);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    transition: stroke-dashoffset .35s cubic-bezier(.2,.8,.2,1) .05s;
+  }
+  .q input:checked + .box { background: var(--accent); border-color: var(--accent); }
+  .q input:checked + .box path { stroke-dashoffset: 0; }
+  .q input:focus-visible + .box { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .txt {
+    font-size: 16.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    position: relative;
+    transition: color .4s ease;
+  }
+  .txt::after {
+    content: "";
+    position: absolute; left: 0; right: 0; top: .78em;
+    height: 1px; background: var(--accent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .45s cubic-bezier(.2,.8,.2,1);
+    opacity: .9;
+  }
+  .q input:checked ~ .txt { color: var(--muted); }
+  .q input:checked ~ .txt::after { transform: scaleX(1); }
+
+  .card.every { background: transparent; border-color: transparent; box-shadow: none; padding: 8px 4px 0; }
+  .card.every .txt { font-size: 14.5px; color: var(--ink-soft); }
+  .card.every .box { width: 20px; height: 20px; border-radius: 6px; margin-top: 2px; }
+  .card.every .box svg { width: 12px; height: 12px; }
+  .card.every .q { grid-template-columns: 20px 1fr; gap: 12px; padding: 5px 0; }
+  .card.every .label { margin-bottom: 6px; }
+
+  /* footer */
+  .foot {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--muted);
+    display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+  }
+  .foot button {
+    border: 0; background: transparent; padding: 0; cursor: pointer;
+    color: var(--muted); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-strong);
+  }
+  .foot button:hover { color: var(--ink); }
+  details.rules { margin-top: 18px; font-size: 14px; color: var(--ink-soft); }
+  details.rules summary { cursor: pointer; color: var(--muted); font-size: 13px; list-style: none; }
+  details.rules summary::-webkit-details-marker { display: none; }
+  details.rules summary::before { content: "+ "; }
+  details[open].rules summary::before { content: "− "; }
+  details.rules ul { margin: 10px 0 0; padding-left: 18px; }
+  details.rules li { margin: 6px 0; }
+
+  /* begin / done / wait / all screens */
+  .screen {
+    min-height: calc(100dvh - 40px);
+    display: flex; flex-direction: column; justify-content: center;
+    padding-bottom: 10vh;
+  }
+  .screen h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(44px, 11vw, 84px);
+    line-height: .98;
+    letter-spacing: -0.03em;
+    margin: 0 0 22px;
+    font-variation-settings: "opsz" 144;
+  }
+  .screen h1 em { font-style: italic; color: var(--accent); }
+  .screen p { max-width: 46ch; color: var(--ink-soft); font-size: 17px; margin: 0 0 12px; }
+  .actions { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    border: 1px solid var(--ink);
+    background: var(--ink); color: var(--bg);
+    border-radius: 999px; padding: 13px 22px;
+    font-weight: 500; cursor: pointer; font-size: 15px;
+    transition: transform .15s ease, opacity .2s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0) scale(.98); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+  .fine { font-size: 13px; color: var(--muted); margin-top: 22px; }
+
+  /* all days list */
+  .all { margin-top: 28px; }
+  .all h2 {
+    font-family: var(--serif); font-weight: 300; font-size: 34px; letter-spacing: -0.02em; margin: 0 0 6px;
+  }
+  .all .back { font-size: 13px; color: var(--muted); background: transparent; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .week { margin-top: 34px; }
+  .week h3 {
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 0 4px;
+  }
+  .week .theme { font-family: var(--serif); font-style: italic; color: var(--ink-soft); font-size: 16px; margin-bottom: 12px; }
+  .row {
+    display: grid; grid-template-columns: 52px 1fr; gap: 12px;
+    padding: 14px 0; border-top: 1px solid var(--line);
+  }
+  .row.today { background: linear-gradient(90deg, var(--accent-soft), transparent 70%); margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: 10px; border-top-color: transparent; }
+  .row .d { font-family: var(--serif); font-size: 28px; font-weight: 300; line-height: 1; color: var(--ink); letter-spacing: -0.02em; }
+  .row .d small { display: block; font-family: var(--sans); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+  .row .c { font-size: 14px; color: var(--ink-soft); display: grid; gap: 6px; }
+  .row .c span b { font-weight: 600; color: var(--muted); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; margin-right: 8px; }
+
+  .tag {
+    display: inline-block; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 8px; margin-left: 10px; vertical-align: middle;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(() => {
+  // ------------------------------------------------------------
+  // Data: Sprint 1. Day 1 is designed as a Monday.
+  // [theory, bench, voice]
+  // ------------------------------------------------------------
+  const DAYS = [
+    ["Set up the log template. Print the 18.03, 18.06 and 6.042 finals. Seal the solutions.",
+     "Order the full Phase 0 equipment list. Install KiCad and Onshape or Fusion.",
+     "Baseline dB at 1 m and 3 m reading one page aloud. Book an audiology test. Find two Toastmasters clubs nearby."],
+    ["18.03 final. Timed, closed book.",
+     "Scherz and Monk 2.1 to 2.4: charge, current, voltage, resistance.",
+     "Email both clubs asking to visit."],
+    ["18.06 final. Timed.",
+     "S&M 2.5 to 2.8: Ohm’s law, power, resistors, resistivity of materials.",
+     "Rodenburg, chapter 1."],
+    ["6.042 final. Timed.",
+     "Petzold, Code, chapters 1 to 4.",
+     "Drills."],
+    ["Grade all three exams against the solutions. Write the failed-units list. It is now the 18.03 and 18.06 syllabus.",
+     "Petzold 5 to 8.",
+     "Confirm the Toastmasters visit date."],
+    ["18.02 lectures 1 and 2 with problems. Nand2Tetris: install the tools, read chapter 1, build Not, And, Or, Xor, Mux, DMux.",
+     "Unbox the equipment. Multimeter: 10 resistors measured against their colour code, log the error. A battery open and under load.",
+     "Rodenburg, chapter 2. Thirty minutes of drills."],
+    ["18.02 lecture 3 with problems. 6.042 chapters 1 and 2 with problems. Nand2Tetris project 1 complete, every chip passing.",
+     "Voltage divider, three ratios, measured against calculated.",
+     "Weekly dB reading and a two-minute recording. Weekly “what?” total."],
+    ["18.02 lecture 4. Petzold 9 to 11.",
+     "S&M 2.9 to 2.12: series, parallel, Kirchhoff. A two-loop circuit, KVL and KCL verified to three significant figures.",
+     "Rung 1: ask one question in a work meeting."],
+    ["18.02 lecture 5. Petzold 12 to 14.",
+     "S&M 2.13 to 2.16: capacitors. RC charging on the scope, τ measured against RC.",
+     "Drills."],
+    ["18.02 lecture 6. Petzold 15 to 17.",
+     "S&M 2.17 to 2.20: inductors, RL.",
+     "Attend Toastmasters as a guest."],
+    ["18.02 Unit 1 problem sets. Petzold 18 to 20.",
+     "S&M 2.21 to 2.24: AC, reactance, impedance.",
+     "Audiology test, or the first available date."],
+    ["18.02 lecture 7, review. Petzold 21 to 24. Nand2Tetris chapter 2 read.",
+     "RC low-pass filter: amplitude at six frequencies on the scope.",
+     "Rodenburg, chapter 3."],
+    ["18.02 Exam 1 (OCW practice). Timed, graded. Nand2Tetris project 2: HalfAdder, FullAdder, Add16, Inc16, ALU.",
+     "Bode plot, predicted against measured, plotted. Giesecke chapters 1 and 2.",
+     "Love, chapters 1 and 2."],
+    ["6.042 chapters 3 and 4 with problems. Petzold 25 to the end.",
+     "CAD: a 20 mm cube with a 5 mm hole and 3 mm fillets, fully constrained sketch. Print it. Measure every dimension, log the deviations.",
+     "Weekly dB reading and recording."],
+    ["18.02 lecture 8. 6.042 chapter 5, induction.",
+     "S&M chapter 4: semiconductors, diodes. Diode I-V curve, eight points.",
+     "Rung 2: speak first in standup every day this week."],
+    ["18.02 lecture 9. 6.042 chapter 5 problems.",
+     "Half-wave rectifier with a smoothing cap: ripple against C on the scope.",
+     "Drills."],
+    ["18.02 lecture 10. 6.042 chapter 6, state machines.",
+     "Full-wave bridge. LED current-limit resistor designed, If and Vf measured.",
+     "Join Toastmasters. Register for Pathways."],
+    ["18.02 lecture 11. 6.042 chapter 7, recursive data types.",
+     "S&M chapter 4: BJT. BJT as a switch: Ib, Ic, Vce(sat) measured.",
+     "Love, chapter 3."],
+    ["18.02 lecture 12. 6.042 chapters 6 and 7 problems. Nand2Tetris chapter 3 read.",
+     "MOSFET as a switch: Vgs threshold, Rds(on) estimate. Giesecke chapter 3, sketching.",
+     "Drills."],
+    ["18.02 Unit 2 problem sets, first half. Nand2Tetris project 3: Bit, Register, RAM8 to RAM16K, PC.",
+     "Hand orthographic drawing of a real object, three views. CAD the same object. Print, compare. Giesecke chapter 5, orthographic.",
+     "Love, chapters 4 and 5."],
+    ["6.042 chapter 8 read. Chapter 9, number theory, begun.",
+     "555 astable on the breadboard: frequency and duty predicted against measured for three RC sets.",
+     "Weekly dB reading and recording. Rung review."],
+    ["18.02 lecture 13. 6.042 chapter 9.",
+     "S&M chapter 8: op-amps, theory.",
+     "Rung 3: one conversation with a stranger every day this week."],
+    ["18.02 lecture 14. 6.042 chapter 9 problems.",
+     "Op-amp follower and inverting amp: gain predicted against measured at three gains.",
+     "Hendriksen, chapters 1 and 2."],
+    ["18.02 lecture 15, review. 6.042 chapter 10, directed graphs.",
+     "Non-inverting amp. Rough bandwidth measured.",
+     "Toastmasters: volunteer for a table topic."],
+    ["18.02 Unit 2 problem sets, second half. 6.042 chapter 10 problems.",
+     "KiCad: schematic of the 555 blinker board. 555, pot, caps, LED, resistor, test points, power jack.",
+     "Drills."],
+    ["18.02 Exam 2. Timed, graded. Nand2Tetris chapter 4 read.",
+     "KiCad: footprints assigned, BOM written, parts ordered. Giesecke chapter 7, dimensioning.",
+     "Hendriksen, chapter 3."],
+    ["Nand2Tetris project 4: Mult.asm and Fill.asm. 6.042 chapter 11 skimmed, chapter 12, simple graphs.",
+     "Through-hole soldering practice kit, fifty joints, inspected under magnification. CAD: fits test plate, pins and holes 2.9 to 3.3 mm in 0.1 mm steps. Print, measure.",
+     "Love, chapter 6."],
+    ["6.042 chapter 12 problems.",
+     "KiCad layout: placement, routing, ground pour, DRC clean.",
+     "Weekly dB reading and recording."],
+    ["18.02 lecture 16. 6.042 chapter 13, planar graphs.",
+     "The Art of Electronics 1.1 to 1.4.",
+     "Rung 4: lead one agenda item at work this week."],
+    ["18.02 lecture 17. 6.042 chapter 13 problems.",
+     "AoE 1.5 to 1.7. Scope probe loading measured, 1x against 10x on a high-impedance divider.",
+     "Book the speech-language pathologist or ENT voice session."],
+    ["18.02 lecture 18. 6.042 midterm 1 practice, chapters 1 to 9. Timed.",
+     "KiCad: 3D check, Gerbers, order the board. Giesecke chapter 8, sections.",
+     "Hendriksen, chapter 4."],
+    ["18.02 lecture 19. Midterm graded, every failure redone.",
+     "AoE chapter 1 problems. Learning the Art of Electronics lab 1L.",
+     "Drills."],
+    ["18.02 lecture 20. Nand2Tetris chapter 5 read.",
+     "SMD practice board, 0805 and SOIC, inspected.",
+     "Table topic delivered at Toastmasters, or at the next meeting."],
+    ["Nand2Tetris project 5: Memory and CPU. 18.02 Unit 3 problem sets, first half.",
+     "LAoE lab 2L. CAD: two-part fastened assembly with M3 heat-set inserts. Sketch first, model, print.",
+     "Hendriksen, chapters 5 and 6."],
+    ["Nand2Tetris project 5: Computer, run Pong. 6.042 chapter 14, sums and asymptotics.",
+     "Assembly fit measured and logged.",
+     "Weekly dB reading and recording."],
+    ["18.02 lecture 21. 6.042 chapter 14.",
+     "AoE 2.1 to 2.2, the BJT.",
+     "Rung 5: a five-minute standing explanation of something to a colleague."],
+    ["18.02 lecture 22. 6.042 chapter 14 problems.",
+     "Common-emitter amplifier designed: bias point calculated.",
+     "Speech-language pathologist or ENT session, or the earliest date."],
+    ["18.02 lecture 23. 6.042 chapter 15, cardinality rules.",
+     "CE amplifier built: gain and bias measured against design.",
+     "Ice Breaker speech outline."],
+    ["18.02 lecture 24, review. 6.042 chapter 15 problems.",
+     "Emitter follower: output impedance measured. Giesecke chapter 10, tolerancing.",
+     "Ice Breaker draft written."],
+    ["18.02 Unit 3 problem sets, second half. Nand2Tetris chapter 6 read.",
+     "LAoE lab 4L, diodes and transistors.",
+     "Rehearse the Ice Breaker to camera. Watch it back."],
+    ["18.02 Exam 3. Timed, graded. Nand2Tetris project 6: the assembler in C or Python, passing every test program.",
+     "CAD: bearing holder, 608 bearing press fit. Sketch, model, print, measure. 507 Mechanical Movements: sketch five.",
+     "Rehearse the Ice Breaker twice."],
+    ["6.042 chapter 16, generating functions, read. Nand2Tetris Part 1 complete: write-up.",
+     "Two-hour sketch session: exploded view of the fastened assembly.",
+     "Weekly dB reading and recording."],
+    ["18.02 lecture 25. 18.03 failed unit 1.",
+     "AoE 2.3 to 2.4.",
+     "Rung 6: the Ice Breaker this week."],
+    ["18.02 lecture 26. 18.03 failed unit 1 problems.",
+     "Current source and current mirror built, measured.",
+     "Ice Breaker rehearsal."],
+    ["18.02 lecture 27. 18.03 failed unit 2.",
+     "Differential pair built, measured.",
+     "Ice Breaker delivered at Toastmasters, or the first available slot. Evaluation logged."],
+    ["18.02 lecture 28. 18.06 failed unit 1.",
+     "AoE chapter 2 problems.",
+     "A written reflection on the Ice Breaker."],
+    ["18.02 lecture 29. 18.06 failed unit 1 problems.",
+     "Giesecke chapter 11, threads and fasteners. A hand drawing with thread callouts.",
+     "Hendriksen, chapters 7 and 8."],
+    ["18.02 Unit 4 problem sets, first half. CS:APP chapter 1, 2.1 to 2.2.",
+     "The board arrives: inspect, continuity, compare to the Gerbers. Fallback: LAoE lab 5L. CAD: enclosure concept sketches, six thumbnails, pick one.",
+     "Anderson, chapters 1 to 3."],
+    ["CS:APP 2.3 to 2.4. Data lab started.",
+     "Assemble the board, inspect, power on. Frequency against predicted at three pot positions.",
+     "Weekly dB reading and recording."],
+    ["18.02 lecture 30. 18.06 failed unit 2.",
+     "Board bring-up write-up, with the numbers.",
+     "Rung 7: a five-minute show-and-tell of the board to your team."],
+    ["18.02 lecture 31. 18.06 failed unit 2 problems.",
+     "Enclosure: hand orthographic drawing from the chosen sketch, dimensions taken from the board with calipers.",
+     "Drills."],
+    ["18.02 lecture 32, review. 18.03 failed unit 3.",
+     "Enclosure CAD, parametric from the board dimensions.",
+     "Anderson, chapters 4 to 6."],
+    ["18.02 Unit 4 problem sets, second half. 18.03 failed unit 3 problems.",
+     "Enclosure print v1. Fit test. Log the deviations.",
+     "Drills."],
+    ["18.02 Exam 4. Timed, graded.",
+     "AoE 3.1 to 3.2, FETs.",
+     "Find a local tech or hardware meetup. Register."],
+    ["CS:APP chapter 2 complete. Data lab complete.",
+     "Enclosure v2 with fixes. Print. Formal CAD drawing with tolerances.",
+     "Anderson, chapters 7 to 9."],
+    ["18.03 failed units: practice exam on those units only.",
+     "Four-hour drawing session: assembly drawing of board and enclosure, with BOM.",
+     "Weekly dB reading and recording."],
+    ["18.02 lecture 33, Maxwell’s equations. 18.06 failed unit 3.",
+     "AoE 3.3 to 3.4.",
+     "Rung 8: attend the meetup. Talk to three people."],
+    ["18.02 lecture 34, review. 18.06 failed unit 3 problems.",
+     "MOSFET switch with a gate driver. Switching edges on the scope.",
+     "Drills."],
+    ["18.02 lecture 35, review. Past final 1, timed.",
+     "AoE chapter 3 problems.",
+     "Pathways project 2 outline. Topic: what Nand2Tetris taught me."],
+    ["18.02 past final 2, graded. 18.06 failed-units practice exam.",
+     "Bench capstone write-up draft: 555 board and enclosure, every measurement, photos, drawings.",
+     "Record a ten-minute talk to camera on Nand2Tetris. Watch it back. Note three fixes."],
+    ["18.02: redo every wrong problem from both past finals.",
+     "Giesecke chapter 12, working drawings.",
+     "Hendriksen finished."],
+    ["CS:APP 3.1 to 3.6. 6.042 Parts I to III problem review.",
+     "507 Mechanical Movements: pick one mechanism. Sketch, CAD, print, make it move.",
+     "Anderson finished. Second recording of the talk."],
+    ["6.042 midterm 2 practice, chapters 10 to 16. Timed, graded.",
+     "Mechanism measured: range of motion, backlash.",
+     "Weekly dB reading and recording. Compare with the day 1 baseline. Write five lines."],
+    ["18.02 final. Timed, closed, graded. The gate is 80 percent.",
+     "AoE chapters 1 to 3 summary notes.",
+     "Rung 9: ask a question in front of the whole room, at work or at a meetup."],
+    ["Passed: the close-out begins with Feynman volume 2, chapter 1. Failed: redo the wrong problems and schedule the retake for day 72.",
+     "Jim Williams AN-47, the first ten pages.",
+     "Pathways project 2 draft."],
+    ["18.03 failed units: final retake.",
+     "AN-47 continued. Replicate one measurement idea.",
+     "Pathways speech 2 delivered at Toastmasters, or the first slot."],
+    ["18.06 failed units: final retake.",
+     "Pease, Troubleshooting Analog Circuits, chapters 1 and 2.",
+     "Drills. Reflection."],
+    ["Close-out essay draft: what multivariable calculus is actually about.",
+     "Pease, chapter 3.",
+     "Rung 10: coffee with someone at work you have never spoken to."],
+    ["CS:APP 3.7 to 3.10. Bomb lab phases 1 to 3.",
+     "Gelbart, Building Prototypes, episodes 1 to 6. Notes on techniques to adopt.",
+     "Strang, “A 2020 Vision of Linear Algebra”. Notes."],
+    ["Bomb lab phases 4 to 6.",
+     "Gelbart 7 to 12. Bench capstone write-up finalised.",
+     "Weekly dB reading and recording."],
+    ["6.042 chapters 1 to 16: redo every midterm failure.",
+     "Publish the bench capstone write-up on zufi.dev.",
+     "Start the six-month voice essay outline."],
+    ["18.02 close-out essay published on zufi.dev. Or the 18.02 final retake.",
+     "Sketchbook review: the ten best pages photographed and published as a gallery post.",
+     "Deliver the 18.02 essay as a ten-minute talk to camera."],
+    ["Sprint review written: hours per stream from the log, gates passed and failed, actual against planned.",
+     "Sprint 2 equipment and parts list: Cortex-M board, logic analyzer, components.",
+     "Drills. Monthly “what?” total."],
+    ["Build the Sprint 2 quest list, days 76 to 150, from Phase 2 and the review: 8.01, 6.041, 6.006, Nand2Tetris Part 2, CS:APP labs, bare-metal MCU, mechanical assembly.",
+     "Order the Sprint 2 parts.",
+     "Book the next Pathways project."],
+    ["Log only.",
+     "Free build: four hours, anything, no plan.",
+     "Sprint 1 presence essay published: baseline against now, with the dB numbers, the ladder, and the two recordings."]
+  ];
+
+  const THEMES = [
+    "lines, circles and ellipses",
+    "cubes in two-point perspective",
+    "cylinders, cones and combined primitives",
+    "orthographic views of real objects",
+    "sections and dimensioning",
+    "exploded views",
+    "mechanisms from 507 Mechanical Movements",
+    "enclosure concepts",
+    "line weight and shading",
+    "assembly drawings",
+    "free choice, and a review of the sketchbook"
+  ];
+
+  const DOW = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const TOTAL = 75;
+
+  // ------------------------------------------------------------
+  // Storage (all local, wrapped)
+  // ------------------------------------------------------------
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+    del(k) { try { localStorage.removeItem(k); } catch {} },
+    keys() { try { return Object.keys(localStorage); } catch { return []; } }
+  };
+
+  // ------------------------------------------------------------
+  // Theme
+  // ------------------------------------------------------------
+  const root = document.documentElement;
+  const savedTheme = store.get("theme");
+  if (savedTheme === "light" || savedTheme === "dark") root.setAttribute("data-theme", savedTheme);
+  function currentTheme() {
+    const t = root.getAttribute("data-theme");
+    if (t) return t;
+    return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function toggleTheme() {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    store.set("theme", next);
+    render();
+  }
+
+  // ------------------------------------------------------------
+  // Dates
+  // ------------------------------------------------------------
+  const DAY_MS = 86400000;
+  function localMidnight(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function fmtDate(d) {
+    return d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  }
+  function parseISO(s) {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function toISO(d) {
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  function nextMonday(from) {
+    const d = localMidnight(from);
+    const diff = (8 - d.getDay()) % 7 || 7; // days until next Monday (never 0)
+    return new Date(d.getTime() + diff * DAY_MS);
+  }
+
+  const params = new URLSearchParams(location.search);
+  const previewDay = params.has("day") ? Math.max(0, parseInt(params.get("day"), 10) || 0) : null;
+  const preview = previewDay !== null;
+
+  function computeDay() {
+    if (preview) return previewDay;
+    const start = store.get("startDate");
+    if (!start) return null; // not begun
+    const s = parseISO(start);
+    const t = localMidnight(new Date());
+    return Math.floor((t - s) / DAY_MS) + 1; // may be <= 0 if start is in the future
+  }
+
+  // ------------------------------------------------------------
+  // Per-day state
+  // ------------------------------------------------------------
+  function dayKey(n) { return `day-${n}`; }
+  function loadChecks(n) {
+    if (preview) return previewState[n] || [];
+    try { return JSON.parse(store.get(dayKey(n)) || "[]"); } catch { return []; }
+  }
+  function saveChecks(n, arr) {
+    if (preview) { previewState[n] = arr; return; }
+    store.set(dayKey(n), JSON.stringify(arr));
+  }
+  const previewState = {};
+
+  // ------------------------------------------------------------
+  // Rendering
+  // ------------------------------------------------------------
+  const app = document.getElementById("app");
+  let showAll = false;
+
+  const svgCheck = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>`;
+  const svgSun = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
+  const svgMoon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`;
+
+  function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+  function themeButton() {
+    const dark = currentTheme() === "dark";
+    return `<button class="icon-btn" id="theme" aria-label="Switch to ${dark ? "light" : "dark"} theme" title="Theme">${dark ? svgSun : svgMoon}</button>`;
+  }
+
+  function rule(day, done) {
+    let s = `<div class="rule" aria-hidden="true">`;
+    for (let i = 1; i <= TOTAL; i++) {
+      const cls = i < day ? "past" : i === day ? ("now" + (done ? " done" : "")) : "";
+      s += `<i class="${cls}"></i>`;
+    }
+    return s + `</div>`;
+  }
+
+  function quest(id, text, checked) {
+    return `<label class="q"><input type="checkbox" data-q="${id}" ${checked ? "checked" : ""}><span class="box">${svgCheck}</span><span class="txt">${text}</span></label>`;
+  }
+
+  function renderBegin() {
+    const monday = nextMonday(new Date());
+    const today = localMidnight(new Date());
+    const isMonday = today.getDay() === 1;
+    app.innerHTML = `
+      <div class="screen">
+        <div class="top" style="position:absolute;top:14px;right:16px;">${themeButton()}</div>
+        <h1>Seventy-five<br>days, <em>one quest</em><br>set a day.</h1>
+        <p>Three quests every day: theory, bench, voice. Four more that never change. A day is complete when every one is checked before you sleep.</p>
+        <p>Day 1 is designed as a Monday. Nothing is tracked. Everything stays on this device.</p>
+        <div class="actions">
+          ${isMonday
+            ? `<button class="btn" data-begin="${toISO(today)}">Begin today</button>`
+            : `<button class="btn" data-begin="${toISO(monday)}">Begin ${fmtDate(monday).split(",")[0]} ${monday.getDate()}</button>
+               <button class="btn ghost" data-begin="${toISO(today)}">Begin today anyway</button>`}
+        </div>
+        <p class="fine">Miss a day and the sprint restarts at day 1. Illness or travel has a minimum quest, three times per sprint.</p>
+      </div>`;
+    bindCommon();
+    app.querySelectorAll("[data-begin]").forEach(b => b.addEventListener("click", () => {
+      store.set("startDate", b.dataset.begin);
+      store.keys().filter(k => k.startsWith("day-")).forEach(k => store.del(k));
+      render();
+    }));
+  }
+
+  function renderWaiting(day) {
+    const start = parseISO(store.get("startDate"));
+    app.innerHTML = `
+      <div class="screen">
+        <div class="top" style="position:absolute;top:14px;right:16px;">${themeButton()}</div>
+        <h1>Day one is<br><em>${fmtDate(start).split(",")[0]}</em>.</h1>
+        <p>${fmtDate(start)}. ${-day + 1} ${(-day + 1) === 1 ? "day" : "days"} to go. Use them to order the equipment and open the sketchbook.</p>
+        <div class="actions"><button class="btn ghost" id="reset">Start over</button></div>
+      </div>`;
+    bindCommon();
+    app.querySelector("#reset").addEventListener("click", resetAll);
+  }
+
+  function renderFinished() {
+    app.innerHTML = `
+      <div class="screen">
+        <div class="top" style="position:absolute;top:14px;right:16px;">${themeButton()}</div>
+        <h1>Seventy-five<br>days. <em>Done.</em></h1>
+        <p>You sat the exams, built the board, drew every day, and spoke in rooms you would have avoided. Write the sprint review from the log. Then begin again.</p>
+        <div class="actions">
+          <button class="btn" id="next">Begin Sprint 2</button>
+          <button class="btn ghost" id="all">See Sprint 1 again</button>
+        </div>
+        <p class="fine">Sprint 2 is written on day 74 of this one, from the log, not from the roadmap.</p>
+      </div>`;
+    bindCommon();
+    app.querySelector("#next").addEventListener("click", () => {
+      if (confirm("Begin Sprint 2? This clears Sprint 1 checks on this device.")) {
+        store.keys().filter(k => k.startsWith("day-")).forEach(k => store.del(k));
+        store.set("startDate", toISO(localMidnight(new Date())));
+        render();
+      }
+    });
+    app.querySelector("#all").addEventListener("click", () => { showAll = true; render(); });
+  }
+
+  function renderAll(day) {
+    let s = `<div class="rule" aria-hidden="true"></div>
+      <div class="top"><div class="meta"><span>Sprint 1</span><span>All seventy-five</span></div>${themeButton()}</div>
+      <div class="all"><h2>The whole sprint</h2><button class="back" id="back">← Back to today</button>`;
+    for (let w = 0; w < 11; w++) {
+      s += `<section class="week"><h3>Week ${w + 1}</h3><div class="theme">Sketch theme: ${THEMES[w]}</div>`;
+      for (let i = w * 7; i < Math.min((w + 1) * 7, TOTAL); i++) {
+        const n = i + 1, d = DAYS[i];
+        s += `<div class="row ${n === day ? "today" : ""}">
+          <div class="d">${n}<small>${DOW[i % 7].slice(0, 3)}</small></div>
+          <div class="c">
+            <span><b>Theory</b>${esc(d[0])}</span>
+            <span><b>Bench</b>${esc(d[1])}</span>
+            <span><b>Voice</b>${esc(d[2])}</span>
+          </div></div>`;
+      }
+      s += `</section>`;
+    }
+    s += `</div>`;
+    app.innerHTML = s;
+    bindCommon();
+    app.querySelector("#back").addEventListener("click", () => { showAll = false; render(); scrollTo(0, 0); });
+  }
+
+  function renderDay(day) {
+    const i = day - 1;
+    const d = DAYS[i];
+    const week = Math.floor(i / 7);
+    const theme = THEMES[week];
+    const checks = loadChecks(day);
+    const ids = ["t", "b", "v", "e1", "e2", "e3", "e4"];
+    const isChecked = id => checks.includes(id);
+    const done = ids.every(isChecked);
+    const weekend = i % 7 >= 5;
+
+    const dateLine = preview
+      ? `Day ${day} of Sprint 1`
+      : fmtDate(new Date(parseISO(store.get("startDate")).getTime() + i * DAY_MS));
+
+    app.innerHTML = `
+      ${rule(day, done)}
+      <div class="top">
+        <div class="meta"><span>Sprint 1</span><span>${esc(dateLine)}</span>${preview ? `<span class="tag" style="margin-left:0">preview</span>` : ""}</div>
+        ${themeButton()}
+      </div>
+      <div class="${done ? "done" : ""}" id="dayblock">
+        <div class="day"><div class="num">${day}</div><div class="of">of seventy-five</div></div>
+        <div class="sub">A <b>${DOW[i % 7]}</b>. ${weekend ? "Four hours of theory, four at the bench." : "Three hours of theory, one at the bench."} This week the sketchbook is <b>${theme}</b>.</div>
+        <div class="complete-line">Day ${day} is complete. Rest.</div>
+      </div>
+      <div class="cards">
+        <section class="card"><div class="label">Theory</div>${quest("t", esc(d[0]), isChecked("t"))}</section>
+        <section class="card"><div class="label">Bench<small>${weekend ? "four hours" : "one hour"}</small></div>${quest("b", esc(d[1]), isChecked("b"))}</section>
+        <section class="card"><div class="label">Voice</div>${quest("v", esc(d[2]), isChecked("v"))}</section>
+        <section class="card every"><div class="label">Every day</div>
+          ${quest("e1", "Log: hours by stream, what was done, what went wrong and why, every measurement.", isChecked("e1"))}
+          ${quest("e2", `One sketchbook page. ${esc(theme.charAt(0).toUpperCase() + theme.slice(1))}.`, isChecked("e2"))}
+          ${quest("e3", "Fifteen minutes of voice: breath, hum and trills, one page read aloud at level, one sentence across the room.", isChecked("e3"))}
+          ${quest("e4", "Count every “what?” and “sorry?” you receive today.", isChecked("e4"))}
+        </section>
+      </div>
+      <div class="foot">
+        <button id="all">The whole sprint</button>
+        ${preview ? "" : `<button id="reset">Start over</button>`}
+        <span style="margin-left:auto">Nothing leaves this device.</span>
+      </div>
+      <details class="rules"><summary>Sprint rules</summary>
+        <ul>
+          <li>A day is complete only when every quest is checked before sleep.</li>
+          <li>Miss a day and the sprint restarts at day 1.</li>
+          <li>Illness or travel: the minimum quest is the log, a sketch page, the voice drill, and one hour of theory. It counts. At most three times per sprint.</li>
+          <li>Quests are not reordered within a week. A late package or appointment means the fallback quest, not a skipped day.</li>
+          <li>Theory is passed by exam at 80 percent, closed solutions. Bench work is passed by a working artifact with a number in the log.</li>
+        </ul>
+      </details>`;
+
+    bindCommon();
+    app.querySelectorAll("input[data-q]").forEach(cb => cb.addEventListener("change", () => {
+      const now = loadChecks(day).filter(x => x !== cb.dataset.q);
+      if (cb.checked) now.push(cb.dataset.q);
+      saveChecks(day, now);
+      const allDone = ids.every(id => now.includes(id));
+      const block = app.querySelector("#dayblock");
+      const was = block.classList.contains("done");
+      block.classList.toggle("done", allDone);
+      const seg = app.querySelector(".rule i.now");
+      if (seg) seg.classList.toggle("done", allDone);
+      if (allDone && !was && navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
+    }));
+    app.querySelector("#all").addEventListener("click", () => { showAll = true; render(); scrollTo(0, 0); });
+    const r = app.querySelector("#reset");
+    if (r) r.addEventListener("click", resetAll);
+  }
+
+  function resetAll() {
+    if (!confirm("Start over? This clears the start date and every check on this device.")) return;
+    store.del("startDate");
+    store.keys().filter(k => k.startsWith("day-")).forEach(k => store.del(k));
+    showAll = false;
+    render();
+  }
+
+  function bindCommon() {
+    const t = app.querySelector("#theme");
+    if (t) t.addEventListener("click", toggleTheme);
+  }
+
+  function render() {
+    const day = computeDay();
+    if (showAll) return renderAll(day ?? 0);
+    if (day === null) return renderBegin();
+    if (day <= 0) return preview ? renderBegin() : renderWaiting(day);
+    if (day > TOTAL) return renderFinished();
+    renderDay(day);
+  }
+
+  render();
+
+  // Re-render at local midnight so an open tab rolls to the next day.
+  (function scheduleMidnight() {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    setTimeout(() => { render(); scheduleMidnight(); }, next - now + 500);
+  })();
+})();
+</script>
+</body>
+</html>
