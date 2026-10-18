@@ -199,7 +199,24 @@
     justify-content: space-between;
     align-items: center;
   }
-  .label small { font-weight: 500; letter-spacing: .02em; text-transform: none; font-size: 11.5px; opacity: .85; }
+  .label small { font-weight: 500; letter-spacing: .02em; text-transform: none; font-size: 11.5px; opacity: .85; margin-left: auto; }
+  .label .prog { font-weight: 500; letter-spacing: .02em; text-transform: none; font-size: 11.5px; color: var(--accent); margin-left: 12px; font-variant-numeric: tabular-nums; }
+  .label small + .prog { margin-left: 12px; }
+  .label { justify-content: flex-start; }
+  .sec { margin-top: 14px; }
+  .sec:first-of-type { margin-top: 2px; }
+  .sech {
+    font-family: var(--serif);
+    font-size: 17.5px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 2px;
+    line-height: 1.3;
+  }
+  .secnote { margin: 4px 0 2px 38px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+  .secnote.theory { margin-left: 0; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .card .txt { font-size: 15.5px; }
 
   .q {
     display: grid;
@@ -272,6 +289,8 @@
   .refsec ul, .refsec ol { padding-left: 20px; margin: 8px 0; }
   .refsec li { margin: 6px 0; }
   .refsec b { color: var(--ink); font-weight: 600; }
+  .refsec p.unit { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--ink); margin: 14px 0 4px; }
+  .refsec ol li { margin: 3px 0; }
   .refsec pre {
     background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
     font-size: 13px; line-height: 1.5; overflow-x: auto; color: var(--ink);
@@ -371,266 +390,766 @@
 
 <script>
 (() => {
-  // Sprint 1. Day 1 is designed as a Monday.
-  // { t: theory quest, b: bench quest, tn: theory note, bn: bench note }. Notes may link to Reference with [[id]].
-  // Theory holds every idea, including electronics theory. Bench is always something done with hands or tools.
-  const DAYS = [
-    { t: "Set up the log template. Find one university-level final exam, with solutions, for each of differential equations, linear algebra and discrete mathematics. Print the exams, seal the solutions. Electronics: what current actually is, charge carriers and drift, voltage as potential difference, what sets a resistance.",
-      tn: "The log template is in [[log]]. Any university’s past final with published solutions counts, a full paper, not a quiz. Seal means you do not look at the solutions until day 5. For the electronics, done means you can explain each idea in your own words in the log; [[sources]] has suggestions.",
-      b: "KiCad basics. Install it, create a project, and draw a voltage divider: a battery symbol, two resistors, a ground. Annotate, assign values, run the electrical rules check until it is clean. Order the equipment list.",
-      bn: "KiCad is free and has a built-in getting-started guide. The equipment list is in [[equipment]]; order today so it arrives by the weekend." },
-    { t: "Differential equations diagnostic: sit the exam cold. Timed, closed book. Electronics: Ohm’s law, power and heat, the resistor as a physical object, resistivity of materials.",
-      tn: "Use the paper’s own time limit. Do not grade it today. Derive P = VI = I²R and be able to say whether a quarter-watt resistor survives a given circuit.",
-      b: "CAD basics. Install Onshape or Fusion 360. Sketch, constrain, extrude. Model a 20 mm cube with a 5 mm through hole and 3 mm fillets, with the sketch fully constrained.",
-      bn: "Fully constrained means your tool reports the sketch as fully defined, usually by colour. Save it; you print it on day 14." },
-    { t: "Linear algebra diagnostic: sit the exam cold. Timed. How a computer works, from the ground: binary numbers, Boolean logic, relays and switches, what a gate is.",
-      tn: "Same rules as yesterday. Aim to see a gate as switches controlling switches.",
-      b: "KiCad layout. Assign footprints to yesterday’s divider, open the PCB editor, place the parts, route the traces, add a ground fill, run the design rules check until clean. Open the 3D viewer.",
-      bn: "Use through-hole footprints for now. A clean DRC is the goal, not a pretty board." },
-    { t: "Discrete mathematics diagnostic: sit the exam cold. Timed. Electronics: series and parallel, Kirchhoff’s voltage and current laws, voltage dividers, loading.",
-      tn: "Same rules. Work three divider problems on paper, including one with a load resistor.",
-      b: "CAD drawings. Model a bracket: a plate with four mounting holes and a bent flange. Create a 2D drawing from it with front, top and side views, dimensioned.",
-      bn: "Every CAD tool has a drawing mode. Dimension each feature once, from a datum." },
-    { t: "Grade all three exams against the solutions. Write the failed-topics list. From gates to adders: how a sum is built from gates. Flip-flops, and how a circuit remembers one bit.",
-      tn: "Grading method and what a failed topic is: [[gates]]. End the day with two lists of three topics each, differential equations and linear algebra. They become days 43 to 58. On paper, draw a half adder from gates and trace an SR latch holding its state.",
-      b: "KiCad simulation. Draw an RC circuit with a pulse source, run the built-in SPICE simulator, plot the capacitor voltage, and read τ off the plot. Change R and watch τ move.",
-      bn: "Simulator is under Inspect in the schematic editor. Use a 10 kΩ and 100 nF to start; τ should read about 1 ms." },
-    { t: "Multivariable calculus: vectors, dot product, determinants and cross product, with problems. Build a computer from NAND: install an HDL simulator and build Not, And, Or, Xor, Mux, DMux. Electronics: capacitors, what they store and why, the RC time constant.",
-      tn: "Any HDL simulator works; the free Nand2Tetris toolkit is the standard and ships the chip specs and tests. Chip order in [[maps]].",
-      b: "Unbox the equipment. Multimeter: ten resistors measured against their colour code, error logged. A battery open and under load. Then the voltage divider from day 1 on the breadboard, three ratios, measured against calculated, then loaded with 1 kΩ.",
-      bn: "Error is (measured − nominal) / nominal in percent. Note each resistor’s tolerance band. Explain what the 1 kΩ load did." },
-    { t: "Multivariable calculus: matrices and inverses, with problems. Discrete maths: what a proof is, the well-ordering principle, with problems. Finish the elementary gates and their 16-bit versions, every chip passing. Electronics: inductors, what they store, RL circuits.",
-      tn: "16-bit chips: Not16, And16, Or16, Mux16, Or8Way, Mux4Way16, Mux8Way16, DMux4Way, DMux8Way.",
-      b: "A two-loop circuit from one supply and a branch: KVL round each loop and KCL at each node verified to three significant figures. RC charging on the scope, τ measured against RC for two RC pairs. First solder: 25 joints on the through-hole practice kit.",
-      bn: "τ is where the voltage reaches 63 percent of final. Use the scope cursors. Inspect every joint with the loupe before moving on." },
-    { t: "Equations of planes, square systems. How a computer works: memory, addressing, the clock, the bus. Electronics: alternating current, reactance, impedance, phasors.",
-      tn: "What a word is, how an address selects one location, why a clock exists. Predict your RC’s impedance at 1 kHz on paper before the bench.",
-      b: "Function generator into the RC. Measure the voltages across R and C at 1 kHz against your prediction. Then the RC as a low-pass filter: amplitude ratio at six frequencies spanning a decade either side of fc.",
-      bn: "fc = 1 / (2πRC). Record Vout / Vin at each frequency." },
-    { t: "Parametric equations for lines and curves. How a computer works: machine code, how a CPU fetches, decodes and executes. Electronics: semiconductors and the diode, what a junction does, the exponential I-V law.",
-      b: "Plot yesterday’s filter: gain in dB against log frequency, with the predicted curve 1 / √(1 + (f/fc)²) overlaid. Then the diode I-V curve: eight points between 0.3 V and 0.8 V.",
-      bn: "Series resistor from the bench supply, step the voltage, read V across and I through the diode. Plot both charts in the log." },
-    { t: "Velocity, acceleration, Kepler’s second law. How a computer works: input, output, interrupts, what an operating system is for. Electronics: rectifiers, half-wave and full-wave, smoothing and ripple.",
-      b: "Half-wave rectifier with a smoothing capacitor, ripple against C on the scope for three capacitor values. Then a full-wave bridge from four diodes. LED current-limit resistor designed for 10 mA, If and Vf measured.",
-      bn: "The AC source is the function generator at a few volts and 50 to 100 Hz. R = (Vsupply − Vf) / I." },
-    { t: "Unit 1 problem set, vectors and matrices, every problem on paper. Electronics: the bipolar transistor as a switch, base current, saturation, why a base resistor.",
-      tn: "A problem set is 10 to 20 problems from any source covering the unit 1 topics in [[maps]].",
-      b: "BJT switch driving an LED from a 3.3 V or 5 V signal: Ib, Ic and Vce(sat) measured. Then switch the LED from the function generator’s square wave and watch it on the scope.",
-      bn: "Try two base resistor values and note what happens to Vce(sat)." },
-    { t: "Unit 1 review. Boolean arithmetic: half adder, full adder, two’s complement, how an ALU is specified. Electronics: the MOSFET as a switch, threshold voltage, on-resistance, gate charge.",
-      tn: "Review means redo every problem you got wrong, from scratch.",
-      b: "MOSFET switch: raise the gate voltage slowly and watch drain current begin; Rds(on) from Vds / Id when fully on. Drive it from the square wave and compare its edges with the BJT’s. Then 25 more practice-kit joints.",
-      bn: "Rds(on) = Vds / Id. Use the 2N7000 first, then the IRLZ44N." },
-    { t: "Unit 1 exam, timed, graded. Build HalfAdder, FullAdder, Add16, Inc16 and the ALU. Engineering drawing: what a technical drawing is for, line types, sheet layout, the title block.",
-      tn: "A unit exam is a past paper on that unit from any university, or 8 to 10 unseen problems, 90 minutes. Rules in [[gates]].",
-      b: "Four hours. RL circuit on the scope: current rise and the inductor kickback spike when switched off, then a flyback diode added and the spike measured again. Hand orthographic drawing of a real object, three views. Sketching practice: construction lines and line weight.",
-      bn: "Switch the inductor with the MOSFET. The spike can exceed the supply by a lot; keep the scope on a high range first. Sketching exercises in [[sketch]]." },
-    { t: "Discrete maths: logical formulas, sets, functions, relations, with problems. Engineering drawing: orthographic projection, first and third angle, view placement.",
-      b: "Printer set up and levelled. Print the day 2 cube. Measure every dimension with the calipers, deviations in a table. CAD the day 13 real object and print it. Compare.",
-      bn: "Use third-angle projection from now on. Deviations table: nominal, measured, difference." },
-    { t: "Level curves, partial derivatives, tangent plane approximation. Discrete maths: induction. Electronics: the op-amp, ideal model, the two golden rules, negative feedback.",
-      tn: "Golden rules: no current into the inputs; the output does whatever makes the two inputs equal.",
-      b: "Op-amp follower, then inverting amplifier at gains of 2, 10 and 100: gain predicted against measured at 1 kHz.",
-      bn: "Note where measured falls short of predicted and why. Use the TL072." },
-    { t: "Max-min problems, least squares. Induction problems. Electronics: how the 555 astable works, the two comparators, the flip-flop, the discharge transistor; derive f and duty.",
-      tn: "f = 1.44 / ((R1 + 2R2) C). Duty = (R1 + R2) / (R1 + 2R2).",
-      b: "Non-inverting amplifier and its bandwidth: raise the frequency until gain falls to 70 percent. Then the 555 astable on the breadboard: frequency and duty predicted against measured for three RC sets.",
-      bn: "This 555 circuit is the one the board will carry; the full schematic is in [[board]]." },
-    { t: "Second derivative test, boundaries and infinity. Discrete maths: state machines and invariants. Electronics: Thevenin and Norton equivalents, loading, the small-signal idea.",
-      tn: "Reduce three circuits to Thevenin form on paper, including the divider you built.",
-      b: "Thevenin verified: build a three-resistor network, measure open-circuit voltage and short-circuit current, compare with your paper reduction. Then probe loading: a divider from two 1 MΩ resistors probed at 1x and 10x.",
-      bn: "The 1x and 10x readings differ. Explain why in the log using yesterday’s Thevenin idea." },
-    { t: "Differentials and the chain rule. Discrete maths: recursive data types and structural induction. Engineering drawing: dimensioning rules, what to dimension, where, and what not to.",
-      tn: "Dimension each feature once, from a datum, outside the view where possible, never to hidden lines.",
-      b: "KiCad: the full schematic of the 555 blinker board with values, test points and power jack. ERC clean.",
-      bn: "Complete schematic with pin numbers in [[board]]." },
-    { t: "Gradient, directional derivative, tangent plane. State machine and recursion problems. Sequential logic: the clock, the flip-flop, registers, how RAM is addressed.",
-      b: "KiCad: footprints assigned, BOM exported, parts ordered. CAD: a fits test plate, pins and holes from 2.9 to 3.3 mm in 0.1 mm steps.",
-      bn: "Order parts today so they arrive with the board. The fits plate prints on day 20." },
-    { t: "Unit 2 problem set, first half. Build Bit, Register, RAM8 to RAM16K and the program counter. Engineering drawing: tolerances and fits, why every dimension needs one, clearance, transition, interference.",
-      tn: "Chips: Bit, Register, RAM8, RAM64, RAM512, RAM4K, RAM16K, PC.",
-      b: "Four hours. Print the fits plate and record which pin enters which hole; name each fit. A flip-flop from two NAND gates on a 74HC00, set and reset with buttons, state on an LED. Finish the through-hole practice kit, every joint inspected.",
-      bn: "The 74HC00 is on the parts list. Watch the button bounce on the scope while you are there." },
-    { t: "Discrete maths: infinite sets and countability. Number theory begun: divisibility, gcd, Euclid’s algorithm. Engineering drawing: sectional views, full, half, offset, revolved, when each is used.",
-      b: "KiCad layout of the 555 board: placement, routing, ground pour, DRC clean with your fab’s rules, 3D check. CAD: a two-part fastened assembly with M3 heat-set inserts, sketched by hand first, then modelled.",
-      bn: "Fab rules and ordering steps in [[board]]. Sketch before CAD, every time." },
-    { t: "Lagrange multipliers. Number theory: modular arithmetic, inverses, Fermat and Euler. Electronics: using an oscilloscope properly, probe compensation, triggering, coupling, ground leads.",
-      b: "Gerbers and drill file exported, board ordered. Then the scope lab: compensate the probe, edge-trigger on the 555, AC against DC coupling on an offset signal, long ground lead against short, bandwidth limit on and off.",
-      bn: "Order today; it arrives around day 36. Scope lab steps in [[labs]]." },
-    { t: "Non-independent variables. Number theory problems, including RSA by hand. Electronics: the bipolar transistor properly, current gain, the Ebers-Moll view. Design a common-emitter amplifier: choose Vcc, Ic, Rc, Re and the base divider, bias calculation written out.",
-      b: "Build the common-emitter amplifier you designed. Bias point measured against design. Gain measured at 1 kHz against −Rc / Re.",
-      bn: "Use the 2N3904. Feed it from the function generator through a coupling capacitor at a few tens of millivolts." },
-    { t: "Unit 2 review, partial differential equations. Discrete maths: directed graphs and partial orders. Electronics: the emitter follower, input and output impedance, why a follower exists.",
-      b: "Emitter follower built: output impedance measured from open-circuit and loaded output. Print the two-part fastened assembly, heat-set the inserts, fit measured and logged.",
-      bn: "Rout: measure Vout open, then with a known load, solve. Inserts go in with the iron at around 200 °C." },
-    { t: "Unit 2 problem set, second half. Directed graph problems. Electronics: current sources, current mirrors, the differential pair.",
-      b: "Current source and current mirror built from two 2N3904s, output current measured against reference across three load resistors.",
-      bn: "The mirror’s output should track the reference until the output transistor runs out of headroom. Find that point." },
-    { t: "Unit 2 exam, timed, graded. Machine language: how an instruction set is designed, addressing and compute instructions, symbols. Engineering drawing: threads and fasteners, thread forms, callouts, washers, inserts.",
-      tn: "In the NAND computer these are the A-instruction and the C-instruction. See [[maps]].",
-      b: "Differential pair built: drive the two bases with a small difference and watch the collectors split on the scope. Hand drawing of the fastened assembly with thread and insert callouts.",
-      bn: "Tail current from yesterday’s current source." },
-    { t: "Write two programs in your machine’s assembly: multiply two numbers, and fill the screen while a key is held. Discrete maths: simple graphs, connectivity, colouring, matching. Electronics: field-effect transistors properly, cutoff, triode, saturation, gm.",
-      tn: "Both programs must pass the computer’s supplied tests.",
-      b: "Four hours. SMD soldering practice kit, 0805 and SOIC, inspected. MOSFET switch with and without a gate resistor, rise and fall times on the scope. CAD a bearing holder for a 608 bearing, print it.",
-      bn: "Start the bore at 22.0 mm and adjust from your fits plate result. Drag-solder the SOIC; tweezers and one pad first for the 0805s." },
-    { t: "Simple graph problems. Electronics: FET circuits, the FET switch, the FET current source, the source follower.",
-      b: "Bearing holder measured, bore adjusted, reprinted until the bearing presses in and spins. FET source follower and FET current source built and measured. Sketch session: five mechanisms from a mechanisms catalogue.",
-      bn: "Catalogue in [[sketch]], week 7." },
-    { t: "Double integrals. Discrete maths: planar graphs and Euler’s formula. Electronics: filters with phase, why an RC shifts phase, the Bode plot’s two halves.",
-      b: "Filter lab: RC low-pass and high-pass swept from 10 Hz to 100 kHz at each decade and half-decade, amplitude and phase recorded, both plotted against prediction. RL too if you have the inductor.",
-      bn: "Lab steps in [[labs]]. Phase from the time offset between the two scope channels." },
-    { t: "Double integrals in polar coordinates, applications. Planar graph problems. Digital electronics: the 74HC logic family, how to read a logic datasheet, propagation delay, fan-out, decoupling.",
-      b: "A 4-bit ripple counter from a 74HC393, clocked by your 555, count shown on four LEDs. Decoupling capacitor on the chip. Watch each stage halve the frequency on the scope.",
-      bn: "Datasheet first: find the pinout, Vcc range and max clock yourself." },
-    { t: "Change of variables. Discrete maths midterm: find or write a practice exam covering proofs through number theory. Timed. Electronics: comparators and the Schmitt trigger, hysteresis, why noise causes chatter.",
-      tn: "90 minutes, 6 to 8 unseen problems over proofs, logic, sets, induction, state machines, recursion, infinite sets, number theory.",
-      b: "Op-amp comparator on a slow triangle wave, output chatter observed near the threshold. Positive feedback added to make a Schmitt trigger, hysteresis width measured.",
-      bn: "Hysteresis: the two switching voltages on the scope, difference logged." },
-    { t: "Vector fields and line integrals in the plane. Midterm graded, every failure redone. Electronics: digital to analog, the R-2R ladder, resolution, monotonicity.",
-      b: "An R-2R ladder on the counter outputs: a staircase on the scope. Step height measured against prediction. Then the staircase through an RC into a smooth ramp.",
-      bn: "Use 10 kΩ and 20 kΩ, or two 10 kΩ in series. Four bits, sixteen steps." },
-    { t: "Path independence and conservative fields. Computer architecture: how a fetch-decode-execute CPU is wired from the ALU, registers and program counter. Electronics: pulse-width modulation, duty cycle, average power, driving loads with a MOSFET.",
-      b: "PWM from the 555 with a pot, into the IRLZ44N, dimming an LED. Then the small DC motor: current drawn at five duty cycles, logged.",
-      bn: "Flyback diode across the motor, always. Current from the bench supply’s readout." },
-    { t: "Build the Memory and the CPU. Unit 3 problem set, first half. Electronics: linear regulators, the 7805, dropout, dissipation, decoupling.",
-      b: "Four hours. A 7805 regulated supply on the breadboard with input and output capacitors: regulation measured across three loads, dropout voltage found, output ripple on the scope. CAD: six enclosure concept sketches for the 555 board, by hand, from the board dimensions in KiCad.",
-      bn: "Loads from power resistors or paralleled quarter-watts; mind the dissipation. Pick one enclosure concept." },
-    { t: "Build the Computer and run a game on it. Discrete maths: sums, closed forms, asymptotic notation. Engineering drawing: working drawings, what a complete drawing package contains.",
-      b: "Enclosure: hand orthographic drawing from the chosen sketch with dimensions from the KiCad board. Then the parametric CAD model, board length, width and standoff height as named parameters. Print v1.",
-      bn: "Parametric means changing a parameter updates the model without rework." },
-    { t: "Gradient fields and potential functions. Sums and asymptotics. Electronics: bringing up a new board, the order of checks, what to measure before applying power.",
-      b: "The board arrives: inspect, continuity on every net against the schematic, assemble, power on through the bench supply with a current limit, frequency against predicted at three pot positions. Fallback if it has not arrived: build the 555 permanently on perfboard, soldered, and test the same way.",
-      bn: "Current limit at 50 mA for first power-up. Measure at test point TP1. Predictions in [[board]]." },
-    { t: "Green’s theorem. Sums and asymptotics problems. Engineering drawing: tolerancing a drawing, general tolerances, fit callouts, surface finish.",
-      b: "Board bring-up write-up with the numbers. Enclosure v1 fit test with the real board, every deviation logged.",
-      bn: "Write-up template in [[writeups]]." },
-    { t: "Flux and the normal form of Green’s theorem. Discrete maths: counting, cardinality rules, pigeonhole, binomial coefficients. Prototyping: adhesives, fastening methods, when to print and when to cut.",
-      b: "Enclosure v2 with the fixes, printed. Formal CAD drawing of it with dimensions, tolerances, material and title block.",
-      bn: "Keep v1 next to v2 and photograph them together." },
-    { t: "Unit 3 review. Counting problems. Computer systems: information representation, bits, bytes, hex, two’s complement, overflow, shifts.",
-      b: "Assembly drawing of board and enclosure with balloons and a parts list. Sketch session: five more mechanisms.",
-      bn: "Parts list includes every screw and insert." },
-    { t: "Unit 3 problem set, second half. Assembler design: two-pass assembly, symbol tables. Computer systems: integer arithmetic and floating point. Bit-manipulation puzzles begun.",
-      tn: "First pass builds the symbol table, second pass emits binary. The puzzles: functions like bitAnd and floatScale2 with a restricted operator set; the public self-study version is in [[sources]].",
-      b: "A two-transistor astable multivibrator, the classic LED flasher with no 555: frequency predicted from the RC values against measured.",
-      bn: "Two 2N3904s, two LEDs, two 10 µF, two 47 kΩ, two 470 Ω. f ≈ 1 / (1.4 RC)." },
-    { t: "Unit 3 exam, timed, graded. Write the assembler in C or Python, passing every test program. Floating point continued.",
-      tn: "The supplied .asm programs must assemble to the reference binaries exactly.",
-      b: "Four hours. A 7-segment display showing the counter’s value through a 74HC4511 decoder, clocked by the 555. A mechanism from the catalogue: sketched, modelled, printed, made to move by hand.",
-      bn: "Current-limit resistor on every segment. Mechanism catalogue in [[sketch]], week 7." },
-    { t: "Discrete maths: generating functions, read. Write up the computer you built: what every layer does and why.",
-      tn: "Write-up template in [[writeups]].",
-      b: "Mechanism measured: range of motion, backlash. Exploded-view sketch of the fastened assembly. Write-up draft of the counter and display build, with the measurements.",
-      bn: "Two hours on the sketch, two on the write-up." },
-    { t: "Triple integrals in rectangular and cylindrical coordinates. Differential equations failed topic 1. Electronics: why oscillators drift, temperature coefficients, supply sensitivity, crystals.",
-      tn: "Failed topic 1 is the first item on your day 5 differential equations list. Learn it until unseen problems go right.",
-      b: "Your 555 board’s frequency measured against supply voltage at 5, 7, 9 and 12 V, then against temperature by warming the timing capacitor. Drift logged in percent.",
-      bn: "Warm it with a finger, then a hairdryer from a distance." },
-    { t: "Spherical coordinates, surface area. Failed topic 1 problems. Electronics: power dissipation, thermal resistance, heatsinks, why the 7805 gets hot.",
-      b: "The 7805 supply under load: output ripple and dropout measured at three loads with the scope, with and without a clip-on heatsink, time to too-hot-to-touch logged.",
-      bn: "Dissipation = (Vin − Vout) × I. Predict it before you measure." },
-    { t: "Vector fields in 3D, surface integrals and flux. Differential equations failed topic 2. Electronics: light and temperature sensing, the LDR and the thermistor, the divider as a sensor front end.",
-      b: "A light switch: LDR divider into the comparator, threshold set with a pot, an LED that turns on when the room darkens. Switching point measured in volts and compared to the divider calculation.",
-      bn: "Add the Schmitt feedback from day 31 and see the chatter go." },
-    { t: "The divergence theorem. Linear algebra failed topic 1. Electronics: the H-bridge, how four switches reverse a motor, shoot-through and dead time.",
-      tn: "First item on your day 5 linear algebra list.",
-      b: "Thermistor resistance measured in ice water, at room temperature and in your hand, against the datasheet curve. Then a four-transistor H-bridge on the breadboard driving the DC motor both directions.",
-      bn: "Never close both switches on one side at once. Switch slowly by hand first." },
-    { t: "Divergence theorem applications and proof. Failed topic 1 problems. Electronics: hobby servos, the 1 to 2 ms pulse, how position control works inside.",
-      b: "A servo tester: the 555 producing 1 to 2 ms pulses at 50 Hz with a pot, driving the hobby servo across its range. Pulse width against angle measured at five points.",
-      bn: "A 555 monostable triggered by a second 555 works, or one 555 with a diode to set a narrow duty." },
-    { t: "Unit 4 problem set, first half. Computer systems: machine-level programs, how C becomes assembly, registers, data movement, arithmetic.",
-      tn: "Compile small C functions with -O1 and read the assembly. Map every instruction back to the C.",
-      b: "Four hours. PWM speed control of the motor through the H-bridge, current at five duty cycles in each direction. CAD a motor mount bracket, sketched first, printed, motor fitted.",
-      bn: "Bracket must hold the motor without slop. Measure the motor body before you draw." },
-    { t: "Unit 4 problem set, first half, finished. Line integrals in space, curl, exactness. Linear algebra failed topic 2. Electronics: integrators and differentiators, the op-amp as a calculus machine.",
-      b: "Four hours. CAD and print a servo horn adapter that fits the servo and the motor bracket. Op-amp integrator turning the square wave into a triangle, then a differentiator turning it back, slopes measured against RC.",
-      bn: "A large resistor across the integrator’s capacitor stops it drifting to the rail." },
-    { t: "Stokes’ theorem. Failed topic 2 problems. Electronics: oscillators, the Barkhausen condition, the Wien bridge and phase-shift oscillators.",
-      b: "A phase-shift or Wien bridge oscillator built from one op-amp: frequency measured against prediction, amplitude observed as it starts and stabilises.",
-      bn: "Phase-shift: three RC stages and a gain of 29. Expect to tune the gain by hand." },
-    { t: "Stokes’ theorem continued, review. Differential equations failed topic 3. Electronics: audio amplification, the LM386, gain setting, decoupling, why speakers need capacitors.",
-      b: "An LM386 audio amplifier driving the small speaker from the function generator: gain measured, clipping found and seen on the scope.",
-      bn: "Datasheet application circuit. Keep the volume low; it is a bench, not a party." },
-    { t: "Unit 4 problem set, second half. Failed topic 3 problems. Electronics: the electret microphone, biasing it, small-signal preamps, noise.",
-      b: "Electret microphone biased and fed into an op-amp preamp into the LM386: your voice on the scope and out of the speaker. Preamp gain measured.",
-      bn: "Watch for feedback howl; point the mic away from the speaker." },
-    { t: "Unit 4 review. Computer systems: control flow and procedures in assembly, the stack, calling conventions.",
-      tn: "Review means redo every wrong problem from both halves of the unit 4 set.",
-      b: "Perfboard layout for the counter and display planned on paper: every part placed, every wire routed, parts laid out on the bench and checked against the drawing.",
-      bn: "Saturday’s build goes faster than the plan takes." },
-    { t: "Unit 4 exam, timed, graded. Prototyping: sheet metal basics, bending, drilling, tapping, deburring.",
-      b: "A logic probe built on perfboard from two transistors and two LEDs. Tested on the counter outputs. A tool you keep.",
-      bn: "Add a 74HC14 pulse stretcher if you want the pulsing indicator." },
-    { t: "Information representation complete. Bit puzzles complete, every test passing.",
-      b: "Four hours. The counter and display built permanently on perfboard from Thursday’s plan, soldered, with the 555 on board. CAD an enclosure for it, sketched first, printed.",
-      bn: "Inspect every joint before power. First power-up through the current limit." },
-    { t: "Differential equations failed topics: practice exam on those topics only.",
-      b: "Four hours. Drawing package for the counter enclosure: part drawings, assembly drawing, parts list. Enclosure fitted and fixed to the perfboard.",
-      bn: "One sheet per part, one assembly sheet, one parts list." },
-    { t: "Maxwell’s equations in integral form, and what the three theorems mean physically. Linear algebra failed topic 3. Electronics: transmission line effects at the bench scale, ringing, series termination.",
-      b: "A fast edge from a 74HC14 oscillator into a metre of wire: ringing at the far end on the scope, then a series resistor at the source and the ringing measured again.",
-      bn: "Try 0, 33 and 100 Ω. The probe ground lead length matters here too." },
-    { t: "Multivariable review. Failed topic 3 problems. Electronics: electronic loads, sense resistors, measuring regulation properly.",
-      b: "A crude DC load: a MOSFET, a pot on its gate, and a 1 Ω sense resistor. Used to sweep the 7805 supply from 0 to 1 A and plot output voltage against current.",
-      bn: "Heatsink on the MOSFET. Sense resistor voltage gives the current." },
-    { t: "Multivariable review. Past final 1, timed.",
-      b: "Bench capstone write-up draft: the 555 board and enclosure, every measurement, photos, drawings.",
-      bn: "Template in [[writeups]]." },
-    { t: "Past final 2, graded. Linear algebra failed-topics practice exam.",
-      b: "Working drawings complete for the 555 board enclosure: part drawings, assembly drawing, parts list, checked against the printed parts with calipers.",
-      bn: "Any dimension the calipers disagree with is fixed on the drawing, not ignored." },
-    { t: "Redo every wrong problem from both past finals. Discrete maths problem review, proofs through counting. Mechanisms: gear ratios, torque and speed trade, backlash, the module.",
-      b: "A gear reduction designed in CAD for the DC motor: module, tooth counts, centre distance worked out, gears printed overnight.",
-      bn: "Start with a 3:1 or 4:1 reduction. Print gears with a slightly larger module than you think." },
-    { t: "Discrete maths midterm 2: find or write a practice exam covering graphs through generating functions. Timed, graded.",
-      b: "Four hours. A geared mechanism from the catalogue driven by the DC motor through yesterday’s reduction: sketched, modelled, printed, assembled, running.",
-      bn: "Mechanism catalogue in [[sketch]], week 7." },
-    { t: "Multivariable final preparation: every wrong problem from both past finals redone once more. Midterm 2 failures redone.",
-      b: "Four hours. The motorised mechanism measured: output speed, range of motion, backlash. Short video recorded. Write-up with the numbers. Exploded-view sketch of the mechanism.",
-      bn: "Speed by counting output turns against a stopwatch. Write-up template in [[writeups]]." },
-    { t: "Multivariable calculus final. Timed, closed, graded. The gate is 80 percent. Electronics fundamentals summary notes written: passives, diodes, BJTs, FETs, op-amps, logic.",
-      tn: "A full past final from any university, three hours. Gate rules in [[gates]].",
-      b: "A 74HC595 shift register driving eight LEDs, clocked by a button. First without debouncing, the bounce seen on the scope and in the LEDs, then an RC and Schmitt debounce added.",
-      bn: "The point is to see bounce with your own eyes before you fix it." },
-    { t: "Passed: the close-out begins. Read a foundational text on what a field is. Failed: redo the wrong problems and schedule the retake for day 72. Read a working analog engineer’s application note on high-speed amplifier technique, the first ten pages.",
-      tn: "A field is a quantity with a value at every point in space; Feynman’s opening chapter on electromagnetism is the classic and free, see [[sources]]. Jim Williams’ AN-47 is the standard note, also free. Close-out defined in [[gates]].",
-      b: "Replicate one measurement technique from the application note on your bench.",
-      bn: "Pick the simplest one that your scope can do." },
-    { t: "Differential equations failed topics: final retake. Application note continued.",
-      b: "Probe technique study on the bench: the same fast edge measured with a long ground lead, a short ground spring, and a 50 Ω coax, screenshots compared.",
-      bn: "A ground spring is a bit of wire wound round the probe barrel. Make one." },
-    { t: "Linear algebra failed topics: final retake. How analog engineers troubleshoot: probe technique, ground loops, hunting oscillation.",
-      tn: "Pease’s troubleshooting series is the standard; see [[sources]].",
-      b: "Break your 555 board on purpose, without looking: a leg lifted or a wrong capacitor swapped in by feel. Find the fault with the scope and the method from the reading. Log the steps.",
-      bn: "Time yourself. Then fix it." },
-    { t: "Close-out essay draft: what multivariable calculus is actually about. Study prototype-building technique from a master builder: materials, bending, fastening, adhesives.",
-      tn: "Essay outline in [[writeups]]. Dan Gelbart’s free video series is the standard; see [[sources]].",
-      b: "Second fault: a different break on the counter board. Found, logged, fixed. Then the first prototyping technique from the study tried for real on scrap.",
-      bn: "Faster than yesterday is the goal." },
-    { t: "Reverse-engineer a compiled binary with a debugger, first three stages. Prototyping study continued.",
-      tn: "The public bomb lab binary is the standard exercise; see [[sources]]. Stages are its phases.",
-      b: "Four hours. A sheet-aluminium bracket for the 555 board: drawn, cut, bent, drilled and tapped M3, deburred, board mounted.",
-      bn: "Measure twice. Centre-punch before drilling." },
-    { t: "Reverse-engineering, the last three stages.",
-      b: "Every build of the sprint photographed properly on a plain background. Bench capstone write-up finalised.",
-      bn: "One photo per build, consistent light, consistent angle." },
-    { t: "Discrete maths: redo every midterm failure.",
-      b: "Publish the bench capstone write-up on zufi.dev.",
-      bn: "A post anyone can read, with the measurements table." },
-    { t: "Multivariable close-out essay published on zufi.dev. Or the final retake.",
-      b: "Sketchbook review: the ten best pages photographed and published as a gallery post." },
-    { t: "Sprint review written: hours per stream from the log, gates passed and failed, actual against planned.",
-      tn: "Template in [[writeups]].",
-      b: "Sprint 2 equipment and parts list: a Cortex-M board, logic analyzer, components. Bench tidied, parts sorted and labelled.",
-      bn: "Starting list at the bottom of [[equipment]]." },
-    { t: "Build the Sprint 2 quest list, days 76 to 150, from the review: classical mechanics, probability, algorithms, the compiler and OS layers of your computer, systems labs, bare-metal microcontroller, mechanical assembly.",
-      tn: "Same two-column shape as this sprint, 75 rows, each with a note where the quest needs one. Every bench quest is something built or measured.",
-      b: "Order the Sprint 2 parts." },
-    { t: "Log only.",
-      b: "Free build: four hours, anything, no plan." }
+  // Tables of contents. Day quests reference these; the Reference page lists them in full.
+  const LA = [
+    "Vectors, linear combinations, dot products, lengths and angles",
+    "Matrices; Ax as a combination of columns; the row picture and the column picture",
+    "Elimination: pivots, multipliers, back substitution; when elimination breaks down",
+    "Elimination as matrix multiplication; permutation matrices",
+    "Rules for matrix operations; block multiplication",
+    "Inverse matrices; Gauss-Jordan",
+    "LU factorisation; A = LU and A = LDU",
+    "Transposes; symmetric matrices; AᵀA",
+    "Vector spaces and subspaces; the column space",
+    "The nullspace; special solutions; rank",
+    "The complete solution to Ax = b; reduced row echelon form",
+    "Independence, basis and dimension",
+    "The four fundamental subspaces; rank-nullity",
+    "Orthogonality of the four subspaces",
+    "Projections onto lines and subspaces; the projection matrix",
+    "Least squares approximation",
+    "Orthonormal bases; Gram-Schmidt; QR",
+    "Determinants: the three defining properties and what follows from them",
+    "Determinants: cofactor expansion, Cramer’s rule, volume",
+    "Eigenvalues and eigenvectors; trace and determinant checks",
+    "Diagonalisation; powers Aᵏ; difference equations and Fibonacci",
+    "Markov matrices; steady state",
+    "Symmetric matrices; the spectral theorem",
+    "Positive definite matrices; the tests; the energy xᵀAx",
+    "Similar matrices; change of basis; Jordan form in outline",
+    "Singular value decomposition",
+    "Linear transformations and their matrices",
+    "Complex vectors; Hermitian matrices; the Fourier matrix in outline"
   ];
+  const MV = [
+    "Dot product; vectors; lengths and angles",
+    "Determinants and the cross product; areas and volumes",
+    "Matrices; inverses; solving systems",
+    "Equations of planes; square systems; intersections of planes",
+    "Parametric equations for lines and curves",
+    "Velocity and acceleration; Kepler’s second law",
+    "Level curves; partial derivatives",
+    "Tangent plane approximation; linearisation",
+    "Max-min problems; least squares",
+    "Second derivative test; boundaries and infinity",
+    "Differentials; the chain rule",
+    "Gradient; directional derivative; tangent plane to a surface",
+    "Lagrange multipliers",
+    "Non-independent variables",
+    "Partial differential equations in outline",
+    "Double integrals",
+    "Double integrals in polar coordinates; mass, centroid, moment of inertia",
+    "Change of variables; the Jacobian",
+    "Vector fields; line integrals in the plane; work",
+    "Path independence; conservative fields",
+    "Gradient fields and potential functions",
+    "Green’s theorem",
+    "Flux; the normal form of Green’s theorem",
+    "Simply connected regions",
+    "Triple integrals in rectangular and cylindrical coordinates",
+    "Spherical coordinates; surface area",
+    "Vector fields in 3D; surface integrals and flux",
+    "The divergence theorem",
+    "The divergence theorem: applications and proof",
+    "Line integrals in space; curl; exactness and potentials",
+    "Stokes’ theorem",
+    "Stokes’ theorem continued; topological considerations",
+    "Maxwell’s equations in integral form; what the three theorems mean physically"
+  ];
+  const DM = [
+    "What a proof is: propositions, axioms, the standard proof patterns",
+    "The well-ordering principle",
+    "Logical formulas: propositional logic, truth tables, quantifiers",
+    "Mathematical data types: sets, sequences, functions, binary relations",
+    "Induction: ordinary and strong",
+    "State machines and invariants",
+    "Recursive data types and structural induction",
+    "Infinite sets: countability, Cantor’s argument, the halting problem",
+    "Number theory I: divisibility, gcd, Euclid’s algorithm, primes",
+    "Number theory II: modular arithmetic, inverses, Fermat and Euler, RSA",
+    "Directed graphs and partial orders",
+    "Simple graphs: degree, isomorphism, connectivity, trees, colouring, matching",
+    "Planar graphs: Euler’s formula, the five-colour theorem",
+    "Sums and asymptotics: closed forms, approximations, big-O",
+    "Cardinality rules: bijections, product and division rules, pigeonhole, the binomial theorem",
+    "Generating functions"
+  ];
+  const NAND = [
+    "Elementary gates from NAND: Not, And, Or, Xor, Mux, DMux",
+    "16-bit and multi-way gates: Not16, And16, Or16, Mux16, Or8Way, Mux4Way16, Mux8Way16, DMux4Way, DMux8Way",
+    "Boolean arithmetic: HalfAdder, FullAdder, Add16, Inc16, the ALU",
+    "Sequential logic: Bit, Register, RAM8, RAM64, RAM512, RAM4K, RAM16K, PC",
+    "Machine language: the A-instruction and the C-instruction; the Mult and Fill programs",
+    "Architecture: Memory, CPU, Computer; run a program on it",
+    "The assembler: two passes, symbol table; every test program assembles to the reference binary"
+  ];
+  const EL = [
+    "Charge, current and drift; voltage as potential difference; resistance and resistivity",
+    "Ohm’s law; power and heat; resistor ratings",
+    "Series and parallel; Kirchhoff’s two laws; voltage dividers and loading",
+    "Capacitors: what they store and why; the RC time constant",
+    "Inductors: what they store; RL circuits; the kickback spike and the flyback diode",
+    "Alternating current: amplitude, frequency, phase; reactance; impedance; phasors",
+    "Filters: RC low-pass and high-pass; cutoff frequency; the Bode plot; phase shift",
+    "Semiconductors; the pn junction; the diode’s exponential law; LEDs",
+    "Rectifiers: half-wave and full-wave; smoothing and ripple",
+    "The bipolar transistor as a switch: base current, saturation, the base resistor",
+    "The MOSFET as a switch: threshold, Rds(on), gate charge; MOSFET against BJT",
+    "The op-amp: ideal model, golden rules, negative feedback; follower, inverting, non-inverting; bandwidth",
+    "The 555: the two comparators, the flip-flop, the discharge transistor; astable and monostable; deriving f and duty",
+    "Thevenin and Norton equivalents; source and load impedance; the small-signal idea",
+    "Oscilloscope technique: probes and compensation, triggering, coupling, grounding",
+    "The bipolar transistor as an amplifier: current gain, the Ebers-Moll view, the common-emitter stage and its bias",
+    "The emitter follower; input and output impedance; current sources and mirrors; the differential pair",
+    "FETs properly: cutoff, triode, saturation; gm; FET switch, current source and source follower",
+    "Logic families: 74HC, reading a datasheet, propagation delay, fan-out, decoupling; flip-flops and counters",
+    "Comparators and the Schmitt trigger; hysteresis",
+    "Digital to analog: the R-2R ladder; resolution and monotonicity",
+    "Pulse-width modulation; driving loads with a MOSFET; the H-bridge and shoot-through; the servo pulse",
+    "Linear regulators: the 7805, dropout, dissipation, thermal resistance, heatsinks",
+    "Board bring-up: the order of checks, current limiting, what to measure first",
+    "Why oscillators drift: temperature coefficients, supply sensitivity, crystals",
+    "Sensors as dividers: the LDR and the thermistor; the sensor front end",
+    "Integrators and differentiators; oscillators and the Barkhausen condition; Wien bridge and phase-shift",
+    "Audio: the LM386, electret microphones, preamps, noise",
+    "Shift registers; switch bounce and debouncing",
+    "Ringing on wires: transmission-line effects at bench scale; series termination",
+    "Electronic loads and sense resistors; measuring regulation properly"
+  ];
+  const DE = [
+    "What an ODE is; direction fields; separable equations",
+    "First-order linear equations; integrating factors",
+    "Exact equations; substitutions",
+    "Existence and uniqueness; autonomous equations; stability",
+    "Second-order linear with constant coefficients; the characteristic equation",
+    "Damped oscillations; forced equations; resonance",
+    "Undetermined coefficients; variation of parameters",
+    "The Laplace transform: basics and solving initial value problems",
+    "Systems of first-order equations; matrix form; eigenvalue solutions",
+    "Phase portraits; linearisation near equilibria",
+    "Series solutions in outline",
+    "Numerical methods: Euler, improved Euler, Runge-Kutta"
+  ];
+  const CS = [
+    "Information representation: bits, bytes, hex, two’s complement, overflow, shifts",
+    "Floating point: IEEE 754, rounding, special values",
+    "Machine-level programs: how C becomes assembly; registers; data movement; arithmetic",
+    "Control flow and procedures in assembly; the stack; calling conventions"
+  ];
+
+  // Sprint 1. Day 1 is designed as a Monday. Each quest is a list of sections; each section has checkable items.
+  const DAYS = [
+    /* 1 */ { t: [
+        { h: "Setup", items: ["Create the log file from the template."] },
+        { h: "Linear algebra", items: ["Vectors, linear combinations, dot products, lengths and angles"] },
+        { h: "Multivariable calculus", items: ["Dot product; vectors; lengths and angles"] },
+        { h: "Electronics theory", items: ["Charge, current and drift; voltage as potential difference; resistance and resistivity"] }
+      ],
+      tn: "Template in [[log]]. A topic is done when you have read it and worked its problems. The full contents, and what comes after, are in [[maps]].",
+      b: [
+        { h: "KiCad basics", items: ["Install KiCad and create a project", "Draw a voltage divider: a battery symbol, two resistors, a ground", "Annotate, assign values, run the electrical rules check until it is clean"], n: "KiCad is free and has a built-in getting-started guide." },
+        { h: "Equipment", items: ["Order the full equipment list"], n: "The list, with what each item is for, is in [[equipment]]. Order today so it arrives by the weekend." }
+      ] },
+    /* 2 */ { t: [
+        { h: "Linear algebra", items: ["Matrices; Ax as a combination of columns; the row picture and the column picture"] },
+        { h: "Multivariable calculus", items: ["Determinants and the cross product; areas and volumes"] },
+        { h: "Electronics theory", items: ["Ohm’s law; power and heat; resistor ratings"] }
+      ],
+      b: [
+        { h: "CAD basics", items: ["CAD basics", "Install Onshape or Fusion 360. Sketch, constrain, extrude", "Model a 20 mm cube with a 5 mm through hole and 3 mm fillets, with the sketch fully constrained"], n: "Fully constrained means your tool reports the sketch as fully defined, usually by colour. Save it; you print it on day 14." }
+      ] },
+    /* 3 */ { t: [
+        { h: "Linear algebra", items: ["Elimination: pivots, multipliers, back substitution; when elimination breaks down"] },
+        { h: "Multivariable calculus", items: ["Matrices; inverses; solving systems"] },
+        { h: "Electronics theory", items: ["Series and parallel; Kirchhoff’s two laws; voltage dividers and loading"] }
+      ],
+      b: [
+        { h: "KiCad layout", items: ["KiCad layout", "Assign footprints to yesterday’s divider, open the PCB editor, place the parts, route the traces, add a ground fill, run the design rules check until clean", "Open the 3D viewer"], n: "Use through-hole footprints for now. A clean DRC is the goal, not a pretty board." }
+      ] },
+    /* 4 */ { t: [
+        { h: "Linear algebra", items: ["Elimination as matrix multiplication; permutation matrices"] },
+        { h: "Multivariable calculus", items: ["Equations of planes; square systems; intersections of planes"] },
+        { h: "Discrete mathematics", items: ["What a proof is: propositions, axioms, the standard proof patterns"] }
+      ],
+      b: [
+        { h: "CAD drawings", items: ["CAD drawings", "Model a bracket: a plate with four mounting holes and a bent flange", "Create a 2D drawing from it with front, top and side views, dimensioned"], n: "Every CAD tool has a drawing mode. Dimension each feature once, from a datum." }
+      ] },
+    /* 5 */ { t: [
+        { h: "Linear algebra", items: ["Rules for matrix operations; block multiplication"] },
+        { h: "Multivariable calculus", items: ["Parametric equations for lines and curves"] },
+        { h: "Discrete mathematics", items: ["The well-ordering principle"] }
+      ],
+      b: [
+        { h: "KiCad simulation", items: ["KiCad simulation", "Draw an RC circuit with a pulse source, run the built-in SPICE simulator, plot the capacitor voltage, and read τ off the plot", "Change R and watch τ move"], n: "Simulator is under Inspect in the schematic editor. Use a 10 kΩ and 100 nF to start; τ should read about 1 ms." }
+      ] },
+    /* 6 */ { t: [
+        { h: "A computer from NAND", items: ["Elementary gates from NAND: Not, And, Or, Xor, Mux, DMux"] },
+        { h: "Linear algebra problem set A", items: ["Problems over topics 1 to 5, every one on paper"] },
+        { h: "Multivariable calculus", items: ["Velocity and acceleration; Kepler’s second law"] },
+        { h: "Electronics theory", items: ["Capacitors: what they store and why; the RC time constant"] }
+      ],
+      tn: "Any HDL simulator works; the free Nand2Tetris toolkit is the standard and ships the chip specs and tests.",
+      b: [
+        { h: "First measurements", items: ["Unbox the equipment", "Multimeter: ten resistors measured against their colour code, error logged", "A battery open and under load", "Then the voltage divider from day 1 on the breadboard, three ratios, measured against calculated, then loaded with 1 kΩ"], n: "Error is (measured − nominal) / nominal in percent. Note each resistor’s tolerance band. Explain what the 1 kΩ load did." }
+      ] },
+    /* 7 */ { t: [
+        { h: "A computer from NAND", items: ["16-bit and multi-way gates: Not16, And16, Or16, Mux16, Or8Way, Mux4Way16, Mux8Way16, DMux4Way, DMux8Way"] },
+        { h: "Multivariable problem set, unit 1", items: ["Problems over topics 1 to 6"] },
+        { h: "Discrete mathematics", items: ["Logical formulas: propositional logic, truth tables, quantifiers"] },
+        { h: "Electronics theory", items: ["Inductors: what they store; RL circuits; the kickback spike and the flyback diode"] }
+      ],
+      b: [
+        { h: "Kirchhoff, RC and first solder", items: ["A two-loop circuit from one supply and a branch: KVL round each loop and KCL at each node verified to three significant figures", "RC charging on the scope, τ measured against RC for two RC pairs", "First solder: 25 joints on the through-hole practice kit"], n: "τ is where the voltage reaches 63 percent of final. Use the scope cursors. Inspect every joint with the loupe before moving on." }
+      ] },
+    /* 8 */ { t: [
+        { h: "Linear algebra", items: ["Inverse matrices; Gauss-Jordan"] },
+        { h: "Multivariable exam, unit 1", items: ["Past paper or 8 to 10 unseen problems, 90 minutes, graded"] },
+        { h: "Electronics theory", items: ["Alternating current: amplitude, frequency, phase; reactance; impedance; phasors"] }
+      ],
+      tn: "What a unit exam, a final and the 80 percent gate are: [[gates]].",
+      b: [
+        { h: "AC and the RC filter", items: ["Function generator into the RC", "Measure the voltages across R and C at 1 kHz against your prediction", "Then the RC as a low-pass filter: amplitude ratio at six frequencies spanning a decade either side of fc"], n: "fc = 1 / (2πRC). Record Vout / Vin at each frequency." }
+      ] },
+    /* 9 */ { t: [
+        { h: "Linear algebra", items: ["LU factorisation; A = LU and A = LDU"] },
+        { h: "Multivariable calculus", items: ["Level curves; partial derivatives"] },
+        { h: "Electronics theory", items: ["Filters: RC low-pass and high-pass; cutoff frequency; the Bode plot; phase shift"] }
+      ],
+      b: [
+        { h: "Bode plot and diode curve", items: ["Plot yesterday’s filter: gain in dB against log frequency, with the predicted curve 1 / √(1 + (f/fc)²) overlaid", "Then the diode I-V curve: eight points between 0.3 V and 0.8 V"], n: "Series resistor from the bench supply, step the voltage, read V across and I through the diode. Plot both charts in the log." }
+      ] },
+    /* 10 */ { t: [
+        { h: "Linear algebra", items: ["Transposes; symmetric matrices; AᵀA"] },
+        { h: "Multivariable calculus", items: ["Tangent plane approximation; linearisation"] },
+        { h: "Discrete mathematics", items: ["Mathematical data types: sets, sequences, functions, binary relations"] }
+      ],
+      b: [
+        { h: "Rectifiers and an LED", items: ["Half-wave rectifier with a smoothing capacitor, ripple against C on the scope for three capacitor values", "Then a full-wave bridge from four diodes", "LED current-limit resistor designed for 10 mA, If and Vf measured"], n: "The AC source is the function generator at a few volts and 50 to 100 Hz. R = (Vsupply − Vf) / I." }
+      ] },
+    /* 11 */ { t: [
+        { h: "Linear algebra", items: ["Vector spaces and subspaces; the column space"] },
+        { h: "Multivariable calculus", items: ["Max-min problems; least squares"] },
+        { h: "Electronics theory", items: ["Semiconductors; the pn junction; the diode’s exponential law; LEDs"] }
+      ],
+      b: [
+        { h: "BJT switch", items: ["BJT switch driving an LED from a 3.3 V or 5 V signal: Ib, Ic and Vce(sat) measured", "Then switch the LED from the function generator’s square wave and watch it on the scope"], n: "Try two base resistor values and note what happens to Vce(sat)." }
+      ] },
+    /* 12 */ { t: [
+        { h: "Linear algebra", items: ["The nullspace; special solutions; rank"] },
+        { h: "Multivariable calculus", items: ["Second derivative test; boundaries and infinity"] },
+        { h: "Electronics theory", items: ["Rectifiers: half-wave and full-wave; smoothing and ripple"] }
+      ],
+      b: [
+        { h: "MOSFET switch", items: ["MOSFET switch: raise the gate voltage slowly and watch drain current begin; Rds(on) from Vds / Id when fully on", "Drive it from the square wave and compare its edges with the BJT’s", "Then 25 more practice-kit joints"], n: "Rds(on) = Vds / Id. Use the 2N7000 first, then the IRLZ44N." }
+      ] },
+    /* 13 */ { t: [
+        { h: "A computer from NAND", items: ["Boolean arithmetic: HalfAdder, FullAdder, Add16, Inc16, the ALU"] },
+        { h: "Linear algebra problem set B", items: ["Problems over topics 6 to 10"] },
+        { h: "Multivariable calculus", items: ["Differentials; the chain rule"] },
+        { h: "Electronics theory", items: ["The bipolar transistor as a switch: base current, saturation, the base resistor"] }
+      ],
+      b: [
+        { h: "Inductor kickback and first drawings", items: ["RL circuit on the scope: current rise and the inductor kickback spike when switched off, then a flyback diode added and the spike measured again", "Hand orthographic drawing of a real object, three views", "Sketching practice: construction lines and line weight"], n: "Switch the inductor with the MOSFET. The spike can exceed the supply by a lot; keep the scope on a high range first. Sketching exercises in [[sketch]]." }
+      ] },
+    /* 14 */ { t: [
+        { h: "Linear algebra exam 1", items: ["Topics 1 to 10, 90 minutes, graded; every wrong problem redone"] },
+        { h: "Multivariable calculus", items: ["Gradient; directional derivative; tangent plane to a surface"] },
+        { h: "Discrete mathematics", items: ["Induction: ordinary and strong"] },
+        { h: "Electronics theory", items: ["The MOSFET as a switch: threshold, Rds(on), gate charge; MOSFET against BJT"] }
+      ],
+      b: [
+        { h: "First prints", items: ["Printer set up and levelled", "Print the day 2 cube", "Measure every dimension with the calipers, deviations in a table", "CAD the day 13 real object and print it", "Compare"], n: "Use third-angle projection from now on. Deviations table: nominal, measured, difference." }
+      ] },
+    /* 15 */ { t: [
+        { h: "Linear algebra", items: ["The complete solution to Ax = b; reduced row echelon form"] },
+        { h: "Multivariable calculus", items: ["Lagrange multipliers"] },
+        { h: "Electronics theory", items: ["The op-amp: ideal model, golden rules, negative feedback; follower, inverting, non-inverting; bandwidth"] }
+      ],
+      b: [
+        { h: "Op-amp amplifiers", items: ["Op-amp follower, then inverting amplifier at gains of 2, 10 and 100: gain predicted against measured at 1 kHz"], n: "Note where measured falls short of predicted and why. Use the TL072." }
+      ] },
+    /* 16 */ { t: [
+        { h: "Linear algebra", items: ["Independence, basis and dimension"] },
+        { h: "Multivariable calculus", items: ["Non-independent variables"] },
+        { h: "Electronics theory", items: ["The 555: the two comparators, the flip-flop, the discharge transistor; astable and monostable; deriving f and duty"] }
+      ],
+      b: [
+        { h: "Bandwidth and the 555", items: ["Non-inverting amplifier and its bandwidth: raise the frequency until gain falls to 70 percent", "Then the 555 astable on the breadboard: frequency and duty predicted against measured for three RC sets"], n: "This 555 circuit is the one the board will carry; the full schematic is in [[board]]." }
+      ] },
+    /* 17 */ { t: [
+        { h: "Linear algebra", items: ["The four fundamental subspaces; rank-nullity"] },
+        { h: "Multivariable calculus", items: ["Partial differential equations in outline"] },
+        { h: "Electronics theory", items: ["Thevenin and Norton equivalents; source and load impedance; the small-signal idea"] }
+      ],
+      b: [
+        { h: "Thevenin and probe loading", items: ["Thevenin verified: build a three-resistor network, measure open-circuit voltage and short-circuit current, compare with your paper reduction", "Then probe loading: a divider from two 1 MΩ resistors probed at 1x and 10x"], n: "The 1x and 10x readings differ. Explain why in the log using yesterday’s Thevenin idea." }
+      ] },
+    /* 18 */ { t: [
+        { h: "Linear algebra", items: ["Orthogonality of the four subspaces"] },
+        { h: "Multivariable problem set, unit 2", items: ["Problems over topics 7 to 15"] },
+        { h: "Discrete mathematics", items: ["State machines and invariants"] }
+      ],
+      b: [
+        { h: "Board schematic", items: ["KiCad: the full schematic of the 555 blinker board with values, test points and power jack", "ERC clean"], n: "Complete schematic with pin numbers in [[board]]." }
+      ] },
+    /* 19 */ { t: [
+        { h: "Linear algebra", items: ["Projections onto lines and subspaces; the projection matrix"] },
+        { h: "Multivariable exam, unit 2", items: ["90 minutes, graded; every wrong problem redone"] },
+        { h: "Discrete mathematics", items: ["Recursive data types and structural induction"] }
+      ],
+      b: [
+        { h: "Footprints, BOM and fits plate", items: ["KiCad: footprints assigned, BOM exported, parts ordered", "CAD: a fits test plate, pins and holes from 2.9 to 3.3 mm in 0.1 mm steps"], n: "Order parts today so they arrive with the board. The fits plate prints on day 20." }
+      ] },
+    /* 20 */ { t: [
+        { h: "A computer from NAND", items: ["Sequential logic: Bit, Register, RAM8, RAM64, RAM512, RAM4K, RAM16K, PC"] },
+        { h: "Linear algebra problem set C", items: ["Problems over topics 11 to 15"] },
+        { h: "Multivariable calculus", items: ["Double integrals"] },
+        { h: "Electronics theory", items: ["Oscilloscope technique: probes and compensation, triggering, coupling, grounding"] }
+      ],
+      b: [
+        { h: "Fits plate and a NAND flip-flop", items: ["Print the fits plate and record which pin enters which hole; name each fit", "A flip-flop from two NAND gates on a 74HC00, set and reset with buttons, state on an LED", "Finish the through-hole practice kit, every joint inspected"], n: "The 74HC00 is on the parts list. Watch the button bounce on the scope while you are there." }
+      ] },
+    /* 21 */ { t: [
+        { h: "Linear algebra", items: ["Least squares approximation"] },
+        { h: "Multivariable calculus", items: ["Double integrals in polar coordinates; mass, centroid, moment of inertia"] },
+        { h: "Discrete mathematics", items: ["Infinite sets: countability, Cantor’s argument, the halting problem", "Number theory I: divisibility, gcd, Euclid’s algorithm, primes"] }
+      ],
+      b: [
+        { h: "Board layout and a fastened assembly", items: ["KiCad layout of the 555 board: placement, routing, ground pour, DRC clean with your fab’s rules, 3D check", "CAD: a two-part fastened assembly with M3 heat-set inserts, sketched by hand first, then modelled"], n: "Fab rules and ordering steps in [[board]]. Sketch before CAD, every time." }
+      ] },
+    /* 22 */ { t: [
+        { h: "Linear algebra", items: ["Orthonormal bases; Gram-Schmidt; QR"] },
+        { h: "Multivariable calculus", items: ["Change of variables; the Jacobian"] },
+        { h: "Electronics theory", items: ["The bipolar transistor as an amplifier: current gain, the Ebers-Moll view, the common-emitter stage and its bias"] },
+        { h: "Design", items: ["Design a common-emitter amplifier on paper: Vcc, Ic, Rc, Re, base divider, full bias calculation"] }
+      ],
+      tn: "The amplifier you design here is built tomorrow.",
+      b: [
+        { h: "Order the board, then the scope lab", items: ["Gerbers and drill file exported, board ordered", "Then the scope lab: compensate the probe, edge-trigger on the 555, AC against DC coupling on an offset signal, long ground lead against short, bandwidth limit on and off"], n: "Order today; it arrives around day 36. Scope lab steps in [[labs]]." }
+      ] },
+    /* 23 */ { t: [
+        { h: "Linear algebra", items: ["Determinants: the three defining properties and what follows from them"] },
+        { h: "Multivariable calculus", items: ["Vector fields; line integrals in the plane; work"] },
+        { h: "Discrete mathematics", items: ["Number theory II: modular arithmetic, inverses, Fermat and Euler, RSA"] }
+      ],
+      b: [
+        { h: "Common-emitter amplifier", items: ["Build the common-emitter amplifier you designed", "Bias point measured against design", "Gain measured at 1 kHz against −Rc / Re"], n: "Use the 2N3904. Feed it from the function generator through a coupling capacitor at a few tens of millivolts." }
+      ] },
+    /* 24 */ { t: [
+        { h: "Linear algebra", items: ["Determinants: cofactor expansion, Cramer’s rule, volume"] },
+        { h: "Multivariable calculus", items: ["Path independence; conservative fields"] },
+        { h: "Electronics theory", items: ["The emitter follower; input and output impedance; current sources and mirrors; the differential pair"] }
+      ],
+      b: [
+        { h: "Emitter follower and the assembly", items: ["Emitter follower built: output impedance measured from open-circuit and loaded output", "Print the two-part fastened assembly, heat-set the inserts, fit measured and logged"], n: "Rout: measure Vout open, then with a known load, solve. Inserts go in with the iron at around 200 °C." }
+      ] },
+    /* 25 */ { t: [
+        { h: "Linear algebra", items: ["Eigenvalues and eigenvectors; trace and determinant checks"] },
+        { h: "Multivariable calculus", items: ["Gradient fields and potential functions"] },
+        { h: "Discrete mathematics", items: ["Directed graphs and partial orders"] }
+      ],
+      b: [
+        { h: "Current source and mirror", items: ["Current source and current mirror built from two 2N3904s, output current measured against reference across three load resistors"], n: "The mirror’s output should track the reference until the output transistor runs out of headroom. Find that point." }
+      ] },
+    /* 26 */ { t: [
+        { h: "Linear algebra problem set D", items: ["Problems over topics 16 to 20"] },
+        { h: "Multivariable calculus", items: ["Green’s theorem"] },
+        { h: "Electronics theory", items: ["FETs properly: cutoff, triode, saturation; gm; FET switch, current source and source follower"] }
+      ],
+      b: [
+        { h: "Differential pair", items: ["Differential pair built: drive the two bases with a small difference and watch the collectors split on the scope", "Hand drawing of the fastened assembly with thread and insert callouts"], n: "Tail current from yesterday’s current source." }
+      ] },
+    /* 27 */ { t: [
+        { h: "A computer from NAND", items: ["Machine language: the A-instruction and the C-instruction; the Mult and Fill programs"] },
+        { h: "Linear algebra exam 2", items: ["Topics 11 to 20, 90 minutes, graded; every wrong problem redone"] },
+        { h: "Multivariable calculus", items: ["Flux; the normal form of Green’s theorem"] }
+      ],
+      b: [
+        { h: "SMD practice, MOSFET edges, bearing holder", items: ["SMD soldering practice kit, 0805 and SOIC, inspected", "MOSFET switch with and without a gate resistor, rise and fall times on the scope", "CAD a bearing holder for a 608 bearing, print it"], n: "Start the bore at 22.0 mm and adjust from your fits plate result. Drag-solder the SOIC; tweezers and one pad first for the 0805s." }
+      ] },
+    /* 28 */ { t: [
+        { h: "Linear algebra", items: ["Diagonalisation; powers Aᵏ; difference equations and Fibonacci"] },
+        { h: "Multivariable calculus", items: ["Simply connected regions"] },
+        { h: "Multivariable problem set, unit 3", items: ["Problems over topics 16 to 24"] },
+        { h: "Discrete mathematics", items: ["Simple graphs: degree, isomorphism, connectivity, trees, colouring, matching"] }
+      ],
+      b: [
+        { h: "Bearing fit, FET circuits, mechanisms", items: ["Bearing holder measured, bore adjusted, reprinted until the bearing presses in and spins", "FET source follower and FET current source built and measured", "Sketch session: five mechanisms from a mechanisms catalogue"], n: "Catalogue in [[sketch]], week 7." }
+      ] },
+    /* 29 */ { t: [
+        { h: "Linear algebra", items: ["Markov matrices; steady state"] },
+        { h: "Multivariable exam, unit 3", items: ["90 minutes, graded; every wrong problem redone"] },
+        { h: "Electronics theory", items: ["Logic families: 74HC, reading a datasheet, propagation delay, fan-out, decoupling; flip-flops and counters"] }
+      ],
+      b: [
+        { h: "Filter lab with phase", items: ["Filter lab: RC low-pass and high-pass swept from 10 Hz to 100 kHz at each decade and half-decade, amplitude and phase recorded, both plotted against prediction", "RL too if you have the inductor"], n: "Lab steps in [[labs]]. Phase from the time offset between the two scope channels." }
+      ] },
+    /* 30 */ { t: [
+        { h: "Linear algebra", items: ["Symmetric matrices; the spectral theorem"] },
+        { h: "Multivariable calculus", items: ["Triple integrals in rectangular and cylindrical coordinates"] },
+        { h: "Discrete mathematics", items: ["Planar graphs: Euler’s formula, the five-colour theorem"] }
+      ],
+      b: [
+        { h: "4-bit counter", items: ["A 4-bit ripple counter from a 74HC393, clocked by your 555, count shown on four LEDs", "Decoupling capacitor on the chip", "Watch each stage halve the frequency on the scope"], n: "Datasheet first: find the pinout, Vcc range and max clock yourself." }
+      ] },
+    /* 31 */ { t: [
+        { h: "Linear algebra", items: ["Positive definite matrices; the tests; the energy xᵀAx"] },
+        { h: "Multivariable calculus", items: ["Spherical coordinates; surface area"] },
+        { h: "Discrete mathematics midterm 1", items: ["Topics 1 to 10, 90 minutes, graded"] },
+        { h: "Electronics theory", items: ["Comparators and the Schmitt trigger; hysteresis"] }
+      ],
+      b: [
+        { h: "Comparator and Schmitt trigger", items: ["Op-amp comparator on a slow triangle wave, output chatter observed near the threshold", "Positive feedback added to make a Schmitt trigger, hysteresis width measured"], n: "Hysteresis: the two switching voltages on the scope, difference logged." }
+      ] },
+    /* 32 */ { t: [
+        { h: "Linear algebra", items: ["Similar matrices; change of basis; Jordan form in outline"] },
+        { h: "Multivariable calculus", items: ["Vector fields in 3D; surface integrals and flux"] },
+        { h: "Midterm corrections", items: ["Every wrong problem redone from scratch"] },
+        { h: "Electronics theory", items: ["Digital to analog: the R-2R ladder; resolution and monotonicity"] }
+      ],
+      b: [
+        { h: "R-2R DAC", items: ["An R-2R ladder on the counter outputs: a staircase on the scope", "Step height measured against prediction", "Then the staircase through an RC into a smooth ramp"], n: "Use 10 kΩ and 20 kΩ, or two 10 kΩ in series. Four bits, sixteen steps." }
+      ] },
+    /* 33 */ { t: [
+        { h: "Linear algebra", items: ["Singular value decomposition"] },
+        { h: "Multivariable calculus", items: ["The divergence theorem"] },
+        { h: "Electronics theory", items: ["Pulse-width modulation; driving loads with a MOSFET; the H-bridge and shoot-through; the servo pulse"] }
+      ],
+      b: [
+        { h: "PWM and a motor", items: ["PWM from the 555 with a pot, into the IRLZ44N, dimming an LED", "Then the small DC motor: current drawn at five duty cycles, logged"], n: "Flyback diode across the motor, always. Current from the bench supply’s readout." }
+      ] },
+    /* 34 */ { t: [
+        { h: "A computer from NAND", items: ["Architecture: Memory, CPU, Computer; run a program on it"] },
+        { h: "Multivariable calculus", items: ["The divergence theorem: applications and proof"] },
+        { h: "Linear algebra problem set E", items: ["Problems over topics 21 to 26"] },
+        { h: "Electronics theory", items: ["Linear regulators: the 7805, dropout, dissipation, thermal resistance, heatsinks"] }
+      ],
+      b: [
+        { h: "7805 supply and enclosure concepts", items: ["A 7805 regulated supply on the breadboard with input and output capacitors: regulation measured across three loads, dropout voltage found, output ripple on the scope", "CAD: six enclosure concept sketches for the 555 board, by hand, from the board dimensions in KiCad"], n: "Loads from power resistors or paralleled quarter-watts; mind the dissipation. Pick one enclosure concept." }
+      ] },
+    /* 35 */ { t: [
+        { h: "A computer from NAND", items: ["Computer assembled; a supplied program runs on it"] },
+        { h: "Multivariable calculus", items: ["Line integrals in space; curl; exactness and potentials"] },
+        { h: "Discrete mathematics", items: ["Sums and asymptotics: closed forms, approximations, big-O"] }
+      ],
+      b: [
+        { h: "Enclosure v1", items: ["Enclosure: hand orthographic drawing from the chosen sketch with dimensions from the KiCad board", "Then the parametric CAD model, board length, width and standoff height as named parameters", "Print v1"], n: "Parametric means changing a parameter updates the model without rework." }
+      ] },
+    /* 36 */ { t: [
+        { h: "Linear algebra", items: ["Linear transformations and their matrices"] },
+        { h: "Multivariable calculus", items: ["Stokes’ theorem"] },
+        { h: "Electronics theory", items: ["Board bring-up: the order of checks, current limiting, what to measure first"] }
+      ],
+      b: [
+        { h: "Board bring-up", items: ["The board arrives: inspect, continuity on every net against the schematic, assemble, power on through the bench supply with a current limit, frequency against predicted at three pot positions", "Fallback if it has not arrived: build the 555 permanently on perfboard, soldered, and test the same way"], n: "Current limit at 50 mA for first power-up. Measure at test point TP1. Predictions in [[board]]." }
+      ] },
+    /* 37 */ { t: [
+        { h: "Linear algebra", items: ["Complex vectors; Hermitian matrices; the Fourier matrix in outline"] },
+        { h: "Multivariable calculus", items: ["Stokes’ theorem continued; topological considerations"] },
+        { h: "Discrete mathematics", items: ["Sums and asymptotics problems"] }
+      ],
+      b: [
+        { h: "Bring-up write-up and fit test", items: ["Board bring-up write-up with the numbers", "Enclosure v1 fit test with the real board, every deviation logged"], n: "Write-up template in [[writeups]]." }
+      ] },
+    /* 38 */ { t: [
+        { h: "Linear algebra review", items: ["Every wrong problem from sets A to E redone"] },
+        { h: "Multivariable calculus", items: ["Maxwell’s equations in integral form; what the three theorems mean physically"] },
+        { h: "Discrete mathematics", items: ["Cardinality rules: bijections, product and division rules, pigeonhole, the binomial theorem"] }
+      ],
+      b: [
+        { h: "Enclosure v2", items: ["Enclosure v2 with the fixes, printed", "Formal CAD drawing of it with dimensions, tolerances, material and title block"], n: "Keep v1 next to v2 and photograph them together." }
+      ] },
+    /* 39 */ { t: [
+        { h: "Linear algebra past final 1", items: ["Full paper, three hours, graded"] },
+        { h: "Multivariable problem set, unit 4", items: ["Problems over topics 25 to 33"] },
+        { h: "Discrete mathematics", items: ["Cardinality problems"] }
+      ],
+      b: [
+        { h: "Assembly drawing", items: ["Assembly drawing of board and enclosure with balloons and a parts list", "Sketch session: five more mechanisms"], n: "Parts list includes every screw and insert." }
+      ] },
+    /* 40 */ { t: [
+        { h: "Linear algebra corrections", items: ["Every wrong problem from past final 1 redone"] },
+        { h: "Assembler design", items: ["Two-pass assembly, symbol table, the Hack binary format"] },
+        { h: "Electronics theory", items: ["Why oscillators drift: temperature coefficients, supply sensitivity, crystals"] }
+      ],
+      b: [
+        { h: "Two-transistor flasher", items: ["A two-transistor astable multivibrator, the classic LED flasher with no 555: frequency predicted from the RC values against measured"], n: "Two 2N3904s, two LEDs, two 10 µF, two 47 kΩ, two 470 Ω. f ≈ 1 / (1.4 RC)." }
+      ] },
+    /* 41 */ { t: [
+        { h: "A computer from NAND", items: ["The assembler: two passes, symbol table; every test program assembles to the reference binary"] },
+        { h: "Multivariable exam, unit 4", items: ["90 minutes, graded"] },
+        { h: "Linear algebra past final 2", items: ["Full paper, three hours, graded"] }
+      ],
+      b: [
+        { h: "7-segment display and a mechanism", items: ["A 7-segment display showing the counter’s value through a 74HC4511 decoder, clocked by the 555. A mechanism from the catalogue: sketched, modelled, printed, made to move by hand"], n: "Current-limit resistor on every segment. Mechanism catalogue in [[sketch]], week 7." }
+      ] },
+    /* 42 */ { t: [
+        { h: "Linear algebra final", items: ["Full past paper, three hours, graded; the gate is 80 percent"] },
+        { h: "A computer from NAND", items: ["Write-up: what each of the seven layers does and why it must exist"] },
+        { h: "Discrete mathematics", items: ["Generating functions"] }
+      ],
+      tn: "Write-up template in [[writeups]].",
+      b: [
+        { h: "Mechanism measured", items: ["Mechanism measured: range of motion, backlash", "Exploded-view sketch of the fastened assembly", "Write-up draft of the counter and display build, with the measurements"], n: "Two hours on the sketch, two on the write-up." }
+      ] },
+    /* 43 */ { t: [
+        { h: "Multivariable past final 1", items: ["Full paper, three hours, graded"] },
+        { h: "Discrete mathematics", items: ["Generating function problems"] },
+        { h: "Electronics theory", items: ["Sensors as dividers: the LDR and the thermistor; the sensor front end"] }
+      ],
+      b: [
+        { h: "555 drift", items: ["Your 555 board’s frequency measured against supply voltage at 5, 7, 9 and 12 V, then against temperature by warming the timing capacitor", "Drift logged in percent"], n: "Warm it with a finger, then a hairdryer from a distance." }
+      ] },
+    /* 44 */ { t: [
+        { h: "Multivariable corrections", items: ["Every wrong problem from past final 1 redone"] },
+        { h: "Discrete mathematics review", items: ["Every wrong problem from midterm 1 and the problem sets redone"] },
+        { h: "Electronics theory", items: ["Linear regulators: the 7805, dropout, dissipation, thermal resistance, heatsinks"] }
+      ],
+      b: [
+        { h: "7805 thermal", items: ["The 7805 supply under load: output ripple and dropout measured at three loads with the scope, with and without a clip-on heatsink, time to too-hot-to-touch logged"], n: "Dissipation = (Vin − Vout) × I. Predict it before you measure." }
+      ] },
+    /* 45 */ { t: [
+        { h: "Multivariable past final 2", items: ["Full paper, three hours, graded"] },
+        { h: "Electronics theory", items: ["Sensors as dividers: the LDR and the thermistor; the sensor front end"] }
+      ],
+      b: [
+        { h: "Light switch", items: ["A light switch: LDR divider into the comparator, threshold set with a pot, an LED that turns on when the room darkens", "Switching point measured in volts and compared to the divider calculation"], n: "Add the Schmitt feedback from day 31 and see the chatter go." }
+      ] },
+    /* 46 */ { t: [
+        { h: "Multivariable corrections", items: ["Every wrong problem from past final 2 redone"] },
+        { h: "Discrete mathematics midterm 2", items: ["Topics 11 to 16, 90 minutes, graded"] },
+        { h: "Electronics theory", items: ["Pulse-width modulation; driving loads with a MOSFET; the H-bridge and shoot-through; the servo pulse"] }
+      ],
+      b: [
+        { h: "Thermistor and H-bridge", items: ["Thermistor resistance measured in ice water, at room temperature and in your hand, against the datasheet curve", "Then a four-transistor H-bridge on the breadboard driving the DC motor both directions"], n: "Never close both switches on one side at once. Switch slowly by hand first." }
+      ] },
+    /* 47 */ { t: [
+        { h: "Multivariable calculus final", items: ["Full past paper, three hours, graded; the gate is 80 percent"] },
+        { h: "Midterm 2 corrections", items: ["Every wrong problem redone"] }
+      ],
+      b: [
+        { h: "Servo tester", items: ["A servo tester: the 555 producing 1 to 2 ms pulses at 50 Hz with a pot, driving the hobby servo across its range", "Pulse width against angle measured at five points"], n: "A 555 monostable triggered by a second 555 works, or one 555 with a diode to set a narrow duty." }
+      ] },
+    /* 48 */ { t: [
+        { h: "Linear algebra close-out", items: ["Read Strang’s paper on the fundamental theorem of linear algebra and one more foundational text; notes"] },
+        { h: "Differential equations", items: ["What an ODE is; direction fields; separable equations", "First-order linear equations; integrating factors"] }
+      ],
+      tn: "Close-out defined in [[gates]]; essay outline in [[writeups]]; the texts in [[sources]].",
+      b: [
+        { h: "Motor speed control and bracket", items: ["PWM speed control of the motor through the H-bridge, current at five duty cycles in each direction", "CAD a motor mount bracket, sketched first, printed, motor fitted"], n: "Bracket must hold the motor without slop. Measure the motor body before you draw." }
+      ] },
+    /* 49 */ { t: [
+        { h: "Multivariable close-out", items: ["Read Feynman’s opening chapter on fields and one more foundational text; notes"] },
+        { h: "Differential equations", items: ["Exact equations; substitutions"] },
+        { h: "Linear algebra essay", items: ["Draft: what linear algebra is actually about"] }
+      ],
+      b: [
+        { h: "Servo horn and op-amp calculus", items: ["CAD and print a servo horn adapter that fits the servo and the motor bracket", "Op-amp integrator turning the square wave into a triangle, then a differentiator turning it back, slopes measured against RC"], n: "A large resistor across the integrator’s capacitor stops it drifting to the rail." }
+      ] },
+    /* 50 */ { t: [
+        { h: "Differential equations", items: ["Existence and uniqueness; autonomous equations; stability"] },
+        { h: "Electronics theory", items: ["Integrators and differentiators; oscillators and the Barkhausen condition; Wien bridge and phase-shift"] },
+        { h: "Linear algebra essay", items: ["Published on zufi.dev"] }
+      ],
+      b: [
+        { h: "Oscillator", items: ["A phase-shift or Wien bridge oscillator built from one op-amp: frequency measured against prediction, amplitude observed as it starts and stabilises"], n: "Phase-shift: three RC stages and a gain of 29. Expect to tune the gain by hand." }
+      ] },
+    /* 51 */ { t: [
+        { h: "Differential equations", items: ["Second-order linear with constant coefficients; the characteristic equation"] },
+        { h: "Electronics theory", items: ["Integrators and differentiators; oscillators and the Barkhausen condition; Wien bridge and phase-shift"] },
+        { h: "Mechanisms", items: ["Gear ratios, torque and speed trade, backlash, the module"] }
+      ],
+      b: [
+        { h: "Audio amplifier", items: ["An LM386 audio amplifier driving the small speaker from the function generator: gain measured, clipping found and seen on the scope"], n: "Datasheet application circuit. Keep the volume low; it is a bench, not a party." }
+      ] },
+    /* 52 */ { t: [
+        { h: "Differential equations", items: ["Damped oscillations; forced equations; resonance"] },
+        { h: "Electronics theory", items: ["Audio: the LM386, electret microphones, preamps, noise"] }
+      ],
+      b: [
+        { h: "Microphone preamp", items: ["Electret microphone biased and fed into an op-amp preamp into the LM386: your voice on the scope and out of the speaker", "Preamp gain measured"], n: "Watch for feedback howl; point the mic away from the speaker." }
+      ] },
+    /* 53 */ { t: [
+        { h: "Differential equations", items: ["Undetermined coefficients; variation of parameters"] },
+        { h: "Computer systems", items: ["Control flow and procedures in assembly; the stack; calling conventions"] },
+        { h: "Multivariable essay", items: ["Draft: what multivariable calculus is actually about"] }
+      ],
+      b: [
+        { h: "Perfboard plan", items: ["Perfboard layout for the counter and display planned on paper: every part placed, every wire routed, parts laid out on the bench and checked against the drawing"], n: "Saturday’s build goes faster than the plan takes." }
+      ] },
+    /* 54 */ { t: [
+        { h: "Differential equations", items: ["The Laplace transform: basics and solving initial value problems"] },
+        { h: "Prototyping", items: ["Sheet metal basics: bending, drilling, tapping, deburring"] },
+        { h: "Multivariable essay", items: ["Published on zufi.dev"] }
+      ],
+      b: [
+        { h: "Logic probe", items: ["A logic probe built on perfboard from two transistors and two LEDs", "Tested on the counter outputs", "A tool you keep"], n: "Add a 74HC14 pulse stretcher if you want the pulsing indicator." }
+      ] },
+    /* 55 */ { t: [
+        { h: "Differential equations problem set 1", items: ["Problems over topics 1 to 8"] },
+        { h: "Discrete mathematics review", items: ["Every wrong problem from both midterms redone"] },
+        { h: "What is next", items: ["Read an overview of the next layers of the NAND computer: virtual machine, compiler, operating system"] }
+      ],
+      b: [
+        { h: "Perfboard counter", items: ["The counter and display built permanently on perfboard from Thursday’s plan, soldered, with the 555 on board", "CAD an enclosure for it, sketched first, printed"], n: "Inspect every joint before power. First power-up through the current limit." }
+      ] },
+    /* 56 */ { t: [
+        { h: "Differential equations", items: ["Systems of first-order equations; matrix form; eigenvalue solutions"] },
+        { h: "Discrete mathematics final", items: ["Topics 1 to 16, three hours, graded; the gate is 80 percent"] }
+      ],
+      b: [
+        { h: "Counter enclosure drawings", items: ["Drawing package for the counter enclosure: part drawings, assembly drawing, parts list", "Enclosure fitted and fixed to the perfboard"], n: "One sheet per part, one assembly sheet, one parts list." }
+      ] },
+    /* 57 */ { t: [
+        { h: "Differential equations", items: ["Phase portraits; linearisation near equilibria"] },
+        { h: "Electronics theory", items: ["Ringing on wires: transmission-line effects at bench scale; series termination"] }
+      ],
+      b: [
+        { h: "Ringing and termination", items: ["A fast edge from a 74HC14 oscillator into a metre of wire: ringing at the far end on the scope, then a series resistor at the source and the ringing measured again"], n: "Try 0, 33 and 100 Ω. The probe ground lead length matters here too." }
+      ] },
+    /* 58 */ { t: [
+        { h: "Differential equations", items: ["Series solutions in outline"] },
+        { h: "Electronics theory", items: ["Electronic loads and sense resistors; measuring regulation properly"] }
+      ],
+      b: [
+        { h: "DC load", items: ["A crude DC load: a MOSFET, a pot on its gate, and a 1 Ω sense resistor", "Used to sweep the 7805 supply from 0 to 1 A and plot output voltage against current"], n: "Heatsink on the MOSFET. Sense resistor voltage gives the current." }
+      ] },
+    /* 59 */ { t: [
+        { h: "Differential equations", items: ["Numerical methods: Euler, improved Euler, Runge-Kutta"] },
+        { h: "Discrete mathematics corrections", items: ["Every wrong problem from the final redone"] }
+      ],
+      b: [
+        { h: "Capstone write-up draft", items: ["Bench capstone write-up draft: the 555 board and enclosure, every measurement, photos, drawings"], n: "Template in [[writeups]]." }
+      ] },
+    /* 60 */ { t: [
+        { h: "Differential equations problem set 2", items: ["Problems over topics 9 to 12"] },
+        { h: "Discrete mathematics close-out", items: ["Read Lamport’s How to Write a Proof and one more foundational text; notes"] }
+      ],
+      b: [
+        { h: "Working drawings", items: ["Working drawings complete for the 555 board enclosure: part drawings, assembly drawing, parts list, checked against the printed parts with calipers"], n: "Any dimension the calipers disagree with is fixed on the drawing, not ignored." }
+      ] },
+    /* 61 */ { t: [
+        { h: "Differential equations exam", items: ["Topics 1 to 12, 90 minutes, graded"] },
+        { h: "Discrete mathematics essay", items: ["Draft: what discrete mathematics is actually about"] }
+      ],
+      b: [
+        { h: "Gear reduction", items: ["A gear reduction designed in CAD for the DC motor: module, tooth counts, centre distance worked out, gears printed overnight"], n: "Start with a 3:1 or 4:1 reduction. Print gears with a slightly larger module than you think." }
+      ] },
+    /* 62 */ { t: [
+        { h: "Computer systems", items: ["Information representation: bits, bytes, hex, two’s complement, overflow, shifts"] },
+        { h: "Differential equations corrections", items: ["Every wrong problem redone"] },
+        { h: "Discrete mathematics essay", items: ["Published on zufi.dev"] }
+      ],
+      b: [
+        { h: "Motorised mechanism", items: ["A geared mechanism from the catalogue driven by the DC motor through yesterday’s reduction: sketched, modelled, printed, assembled, running"], n: "Mechanism catalogue in [[sketch]], week 7." }
+      ] },
+    /* 63 */ { t: [
+        { h: "Computer systems", items: ["Floating point: IEEE 754, rounding, special values"] },
+        { h: "Bit puzzles", items: ["Begin: integer and float operations using only bitwise operators"] }
+      ],
+      tn: "The public self-study puzzles are listed in [[sources]].",
+      b: [
+        { h: "Mechanism measured and written up", items: ["The motorised mechanism measured: output speed, range of motion, backlash", "Short video recorded", "Write-up with the numbers", "Exploded-view sketch of the mechanism"], n: "Speed by counting output turns against a stopwatch. Write-up template in [[writeups]]." }
+      ] },
+    /* 64 */ { t: [
+        { h: "Electronics theory", items: ["Shift registers; switch bounce and debouncing"] },
+        { h: "Electronics theory exam", items: ["Twenty questions you write yourself across topics 1 to 31, then answered closed-book a day later; today write them"] },
+        { h: "Electronics summary notes", items: ["One page per family: passives, diodes, BJTs, FETs, op-amps, logic, power"] }
+      ],
+      tn: "Writing the exam is half the revision.",
+      b: [
+        { h: "Shift register and debouncing", items: ["A 74HC595 shift register driving eight LEDs, clocked by a button", "First without debouncing, the bounce seen on the scope and in the LEDs, then an RC and Schmitt debounce added"], n: "The point is to see bounce with your own eyes before you fix it." }
+      ] },
+    /* 65 */ { t: [
+        { h: "Electronics theory exam", items: ["Answer yesterday’s twenty questions closed-book; grade; redo the wrong ones"] },
+        { h: "Application note", items: ["A working analog engineer’s note on high-speed amplifier technique, first ten pages"] }
+      ],
+      b: [
+        { h: "Replicate a measurement", items: ["Replicate one measurement technique from the application note on your bench"], n: "Pick the simplest one that your scope can do." }
+      ] },
+    /* 66 */ { t: [
+        { h: "Application note", items: ["Finished; three techniques listed to try"] },
+        { h: "Troubleshooting", items: ["How analog engineers troubleshoot: probe technique, ground loops, hunting oscillation, part 1"] }
+      ],
+      b: [
+        { h: "Probe technique", items: ["Probe technique study on the bench: the same fast edge measured with a long ground lead, a short ground spring, and a 50 Ω coax, screenshots compared"], n: "A ground spring is a bit of wire wound round the probe barrel. Make one." }
+      ] },
+    /* 67 */ { t: [
+        { h: "Troubleshooting", items: ["Part 2; a written method you will follow on the bench today"] }
+      ],
+      b: [
+        { h: "Fault one", items: ["Break your 555 board on purpose, without looking: a leg lifted or a wrong capacitor swapped in by feel", "Find the fault with the scope and the method from the reading", "Log the steps"], n: "Time yourself. Then fix it." }
+      ] },
+    /* 68 */ { t: [
+        { h: "Prototyping", items: ["A master builder’s series on building prototypes: materials, bending, fastening, adhesives; notes on what to adopt"] },
+        { h: "Computer systems", items: ["Machine-level programs: how C becomes assembly; registers; data movement; arithmetic"] }
+      ],
+      b: [
+        { h: "Fault two", items: ["Second fault: a different break on the counter board", "Found, logged, fixed", "Then the first prototyping technique from the study tried for real on scrap"], n: "Faster than yesterday is the goal." }
+      ] },
+    /* 69 */ { t: [
+        { h: "Reverse engineering", items: ["A compiled binary with a debugger: phases 1 to 3"] },
+        { h: "Bit puzzles", items: ["Finished, every test passing"] }
+      ],
+      tn: "The public bomb-lab binary is the standard exercise; see [[sources]].",
+      b: [
+        { h: "Aluminium bracket", items: ["A sheet-aluminium bracket for the 555 board: drawn, cut, bent, drilled and tapped M3, deburred, board mounted"], n: "Measure twice. Centre-punch before drilling." }
+      ] },
+    /* 70 */ { t: [
+        { h: "Reverse engineering", items: ["Phases 4 to 6"] }
+      ],
+      b: [
+        { h: "Photos and final write-up", items: ["Every build of the sprint photographed properly on a plain background", "Bench capstone write-up finalised"], n: "One photo per build, consistent light, consistent angle." }
+      ] },
+    /* 71 */ { t: [
+        { h: "The log, reread", items: ["Every “wrong, and why” line of the sprint listed and sorted into causes"] }
+      ],
+      b: [
+        { h: "Publish", items: ["Publish the bench capstone write-up on zufi.dev"], n: "A post anyone can read, with the measurements table." }
+      ] },
+    /* 72 */ { t: [
+        { h: "Sprint 1 theory retrospective", items: ["Essay published: what you learned about how you learn"] }
+      ],
+      b: [
+        { h: "Sketchbook review", items: ["Sketchbook review: the ten best pages photographed and published as a gallery post"] }
+      ] },
+    /* 73 */ { t: [
+        { h: "Sprint review", items: ["Hours per stream from the log; every gate and its score; actual against planned; keep and drop"] }
+      ],
+      b: [
+        { h: "Sprint 2 parts list", items: ["Sprint 2 equipment and parts list: a Cortex-M board, logic analyzer, components", "Bench tidied, parts sorted and labelled"], n: "Starting list at the bottom of [[equipment]]." }
+      ] },
+    /* 74 */ { t: [
+        { h: "Sprint 2 table of contents", items: ["Differential equations 13 onward, probability, algorithms, computer systems, the NAND computer’s VM and compiler, bare-metal microcontroller; 75 days in this same shape"] }
+      ],
+      tn: "The next tables of contents are already listed at the end of [[maps]].",
+      b: [
+        { h: "Order parts", items: ["Order the Sprint 2 parts"] }
+      ] },
+    /* 75 */ { t: [
+        { h: "Log", items: ["Log only"] }
+      ],
+      b: [
+        { h: "Free build", items: ["Free build: four hours, anything, no plan"] }
+      ] }
+  ];
+
+  function tocHtml() {
+    const list = (arr, from, to) => `<ol start="${from}">${arr.slice(from - 1, to).map(x => `<li>${x}</li>`).join("")}</ol>`;
+    const group = (title, arr, groups) => `<h4>${title}</h4>` + groups.map(([g, a, b]) => `<p class="unit">${g}</p>${list(arr, a, b)}`).join("");
+    return `
+<p>Everything Sprint 1 covers, in the order it is crushed. Each line is one checkable topic on one day. The next sprint’s tables are at the end so what comes after is never a mystery.</p>
+${group("Linear algebra, 28 topics, final on day 42", LA, [["Solving linear systems", 1, 8], ["Vector spaces", 9, 17], ["Determinants and eigenvalues", 18, 24], ["Beyond", 25, 28]])}
+${group("Multivariable calculus, 33 topics, final on day 47", MV, [["Unit 1, vectors and matrices", 1, 6], ["Unit 2, partial derivatives", 7, 15], ["Unit 3, double integrals and line integrals in the plane", 16, 24], ["Unit 4, triple integrals and surface integrals", 25, 33]])}
+${group("Discrete mathematics, 16 topics, final on day 56", DM, [["Part I, proofs", 1, 8], ["Part II, structures", 9, 13], ["Part III, counting", 14, 16]])}
+${group("A computer from NAND, 7 projects, done by day 42", NAND, [["Hardware then software", 1, 7]])}
+${group("Electronics theory, 31 topics, in the order the bench meets them", EL, [["Passives and signals", 1, 7], ["Semiconductors", 8, 11], ["Op-amps, timers, technique", 12, 15], ["Transistor circuits", 16, 18], ["Digital, power, systems", 19, 31]])}
+<h4>Head starts for Sprint 2</h4>
+<p class="unit">Differential equations, 12 topics, weeks 8 to 10</p>${list(DE, 1, DE.length)}
+<p class="unit">Computer systems, 4 topics, weeks 9 to 10</p>${list(CS, 1, CS.length)}
+<h4>Sprint 2 and after</h4>
+<p>Differential equations continued, probability, classical mechanics, algorithms, computer systems in full, the NAND computer’s virtual machine and compiler, bare-metal microcontroller programming, and electromagnetism. Written on day 74 in this same shape.</p>`;
+  }
 
   const REF = [
     { id: "equipment", title: "Equipment", body: `
@@ -695,49 +1214,18 @@ Bench:
 -
 </pre>
 <p><b>Wrong, and why</b> is the field that matters. Every problem you got wrong, every circuit that did not match, one line each with the reason. <b>Measurements</b> holds every number you produced that day. The hours are what you add up at the sprint review.</p>` },
-    { id: "gates", title: "Exams, gates and the failed-topics method", body: `
-<h4>Diagnostics, days 2 to 4</h4>
-<p>Any university’s past final with published solutions. A full paper with its own time limit. Closed book. Do not grade until day 5.</p>
-<h4>Grading, day 5</h4>
-<p>Mark each question right or wrong against the solutions. For each wrong question, name the topic it tested in a few words, for example “second-order linear ODE, constant coefficients” or “eigenvalues and diagonalisation”. Group the names. The three most-failed topics for differential equations and the three for linear algebra are your failed topics 1, 2 and 3. If fewer than three fail, use those days for harder problems in the weakest passed areas.</p>
+    { id: "gates", title: "Problem sets, exams and gates", body: `
+<h4>Problem sets</h4>
+<p>Ten to twenty problems from any source over the listed topics, on paper, checked against solutions afterwards. Every wrong problem is redone the next day from scratch.</p>
 <h4>Unit exams and midterms</h4>
-<p>A past paper on that unit from any university, or 8 to 10 problems you have not seen, 90 minutes. Graded against solutions. Every wrong problem is redone the next day.</p>
-<h4>The gate</h4>
-<p>A course is passed when you sit a full final unaided, solutions sealed, and score 80 percent or more. Not before. If you fail, redo the wrong problems and retake a different past paper.</p>
+<p>A past paper on those topics from any university, or 8 to 10 problems you have not seen. Ninety minutes. Graded. Wrong problems redone the next day.</p>
+<h4>Finals and the gate</h4>
+<p>A full past paper, three hours, graded. The subject is passed at 80 percent or more. Below that, redo the wrong problems and sit a different past paper on the retake day.</p>
 <h4>Bench gates</h4>
 <p>A build is done when it works and its measurement is in the log with a predicted-against-measured comparison. A write-up is done when a stranger could repeat the build from it.</p>
 <h4>Close-out</h4>
-<p>Within a week of passing a gate: read two to four foundational texts for the subject, then publish an essay on what the subject is actually about now that you have done it, what surprised you, what still confuses you, and how it connects to what came before. Outline in Write-ups.</p>` },
-    { id: "maps", title: "Topic maps", body: `
-<h4>Multivariable calculus</h4>
-<ul>
-<li><b>Unit 1, vectors and matrices.</b> Dot and cross product, determinants, matrices and inverses, equations of planes, square systems, parametric lines and curves, velocity and acceleration.</li>
-<li><b>Unit 2, partial derivatives.</b> Level curves, partial derivatives, tangent plane, max-min, least squares, second-derivative test, differentials, chain rule, gradient, directional derivative, Lagrange multipliers, non-independent variables.</li>
-<li><b>Unit 3, double integrals and line integrals in the plane.</b> Double integrals, polar coordinates, change of variables, vector fields, line integrals, path independence, potentials, Green’s theorem, flux.</li>
-<li><b>Unit 4, triple integrals and surface integrals.</b> Rectangular, cylindrical and spherical coordinates, surface area, surface integrals and flux, divergence theorem, curl, Stokes’ theorem, Maxwell’s equations in integral form.</li>
-</ul>
-<h4>Discrete mathematics</h4>
-<ul>
-<li><b>Part I, proofs.</b> What a proof is, well ordering, logical formulas, sets, functions, relations, induction, state machines and invariants, recursive data types, infinite sets.</li>
-<li><b>Part II, structures.</b> Number theory, directed graphs and partial orders, simple graphs, planar graphs.</li>
-<li><b>Part III, counting.</b> Sums and asymptotics, cardinality rules, generating functions.</li>
-</ul>
-<h4>Electronics theory, in the order the bench meets it</h4>
-<p>Current, voltage, resistance. Ohm, power. Series, parallel, Kirchhoff, dividers. Capacitors and RC. Inductors and RL. AC, impedance, phasors, filters and phase. Diodes and rectifiers. BJT as switch, then as amplifier, followers, mirrors, differential pair. MOSFET as switch, then FET circuits. Op-amps: golden rules, amplifiers, comparators, Schmitt, integrators, oscillators. 555 internals. Thevenin and loading. Scope technique. Logic families and datasheets. Counters, DACs, shift registers, debouncing. PWM, H-bridges, servos. Linear regulators and dissipation. Sensors as dividers. Ringing and termination.</p>
-<h4>A computer from NAND</h4>
-<ol>
-<li>Elementary gates: Not, And, Or, Xor, Mux, DMux, and their 16-bit and multi-way versions.</li>
-<li>Boolean arithmetic: HalfAdder, FullAdder, Add16, Inc16, ALU.</li>
-<li>Sequential logic: Bit, Register, RAM8 to RAM16K, PC.</li>
-<li>Machine language: A-instruction, C-instruction, symbols. Two programs.</li>
-<li>Architecture: Memory, CPU, Computer.</li>
-<li>Assembler: two-pass, symbol table.</li>
-</ol>
-<h4>Computer systems</h4>
-<ul>
-<li><b>Information representation.</b> Bits, bytes, hex, two’s complement, overflow, shifts, floating point. Lab: bit-manipulation puzzles.</li>
-<li><b>Machine-level programs.</b> How C becomes assembly, registers, data movement, arithmetic, control flow, procedures, the stack. Lab: reverse-engineer a binary with a debugger.</li>
-</ul>` },
+<p>Within a week of passing a final: read two to four foundational texts for the subject, then publish an essay on what the subject is actually about now that you have done it, what surprised you, what still confuses you, and how it connects to what came before. Outline in Write-ups.</p>` },
+    { id: "maps", title: "Tables of contents", body: tocHtml() },
     { id: "board", title: "The 555 blinker board", body: `
 <p>A 555 astable driving an LED, with a potentiometer for frequency and test points so the scope can see it. Two layers, about 50 by 30 mm, ground pour on the back.</p>
 <h4>Schematic</h4>
@@ -919,8 +1407,15 @@ Bench:
     store.set(dayKey(n), JSON.stringify(arr));
   }
   const previewState = {};
+  function dayIds(d) {
+    return [
+      ...d.t.flatMap((sec, si) => sec.items.map((_, ii) => `t${si}.${ii}`)),
+      ...d.b.flatMap((sec, si) => sec.items.map((_, ii) => `b${si}.${ii}`)),
+      "e1", "e2"
+    ];
+  }
   // Preview helpers: ?day=N&done=1 shows the completed state, ?theme=dark forces a theme. Neither persists.
-  if (preview && params.has("done")) previewState[previewDay] = ["t", "b", "e1", "e2"];
+  if (preview && params.has("done") && DAYS[previewDay - 1]) previewState[previewDay] = dayIds(DAYS[previewDay - 1]);
   if (preview && (params.get("theme") === "dark" || params.get("theme") === "light")) root.setAttribute("data-theme", params.get("theme"));
   let showAll = preview && params.has("all");
   let showRef = preview && params.has("ref") ? params.get("ref") : null;
@@ -958,6 +1453,21 @@ Bench:
   }
   function quest(id, text, checked, noteText) {
     return `<label class="q"><input type="checkbox" data-q="${id}" ${checked ? "checked" : ""}><span class="box">${svgCheck}</span><span class="txt">${text}${noteText ? note(noteText) : ""}</span></label>`;
+  }
+  function card(label, sections, prefix, isChecked, small, extraNote) {
+    const all = sections.flatMap((sec, si) => sec.items.map((_, ii) => `${prefix}${si}.${ii}`));
+    const done = all.filter(isChecked).length;
+    const body = sections.map((sec, si) => `
+      <div class="sec">
+        <div class="sech">${esc(sec.h)}</div>
+        ${sec.items.map((it, ii) => quest(`${prefix}${si}.${ii}`, esc(it), isChecked(`${prefix}${si}.${ii}`))).join("")}
+        ${sec.n ? `<div class="secnote">${note(sec.n).replace(/^<div class="note">|<\/div>$/g, "")}</div>` : ""}
+      </div>`).join("");
+    return `<section class="card">
+      <div class="label">${label}${small ? `<small>${small}</small>` : ""}<span class="prog">${done} of ${all.length}</span></div>
+      ${body}
+      ${extraNote ? `<div class="secnote theory">${note(extraNote).replace(/^<div class="note">|<\/div>$/g, "")}</div>` : ""}
+    </section>`;
   }
   function openRef(id) { showRef = id; showAll = false; render(); const el = document.getElementById("ref-" + id); if (el) el.scrollIntoView({ block: "start" }); else scrollTo(0, 0); }
 
@@ -1034,8 +1544,8 @@ Bench:
         s += `<div class="row ${n === day ? "today" : ""}">
           <div class="d">${n}<small>${DOW[i % 7].slice(0, 3)}</small></div>
           <div class="c">
-            <span><b>Theory</b>${esc(d.t)}${note(d.tn)}</span>
-            <span><b>Bench</b>${esc(d.b)}${note(d.bn)}</span>
+            ${d.t.map(sec => `<span><b>${esc(sec.h)}</b>${sec.items.map(esc).join("; ")}</span>`).join("")}
+            ${d.b.map(sec => `<span><b>${esc(sec.h)}</b>${sec.items.map(esc).join("; ")}</span>`).join("")}
           </div></div>`;
       }
       s += `</section>`;
@@ -1052,7 +1562,7 @@ Bench:
     const week = Math.floor(i / 7);
     const theme = THEMES[week];
     const checks = loadChecks(day);
-    const ids = ["t", "b", "e1", "e2"];
+    const ids = dayIds(d);
     const isChecked = id => checks.includes(id);
     const done = ids.every(isChecked);
     const weekend = i % 7 >= 5;
@@ -1073,8 +1583,8 @@ Bench:
         <div class="complete-line">Day ${day} is complete. Rest.</div>
       </div>
       <div class="cards">
-        <section class="card"><div class="label">Theory</div>${quest("t", esc(d.t), isChecked("t"), d.tn)}</section>
-        <section class="card"><div class="label">Bench<small>${weekend ? "four hours" : "one hour"}</small></div>${quest("b", esc(d.b), isChecked("b"), d.bn)}</section>
+        ${card("Theory", d.t, "t", isChecked, weekend ? "four hours" : "three hours", d.tn)}
+        ${card("Bench", d.b, "b", isChecked, weekend ? "four hours" : "one hour")}
         <section class="card every"><div class="label">Every day</div>
           ${quest("e1", "Log: hours by stream, what was done, what went wrong and why, every measurement.", isChecked("e1"), "Template in [[log]].")}
           ${quest("e2", `One sketchbook page. ${esc(theme.charAt(0).toUpperCase() + theme.slice(1))}.`, isChecked("e2"), "This week’s exercise in [[sketch]].")}
