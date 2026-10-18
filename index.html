@@ -239,19 +239,13 @@
     font-size: 16.5px;
     line-height: 1.5;
     color: var(--ink);
-    position: relative;
-    transition: color .4s ease;
+    text-decoration: line-through;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0;
+    transition: color .4s ease, text-decoration-color .45s ease .1s;
   }
-  .txt::after {
-    content: "";
-    position: absolute; left: 0; right: 0; top: .78em;
-    height: 1px; background: var(--accent);
-    transform: scaleX(0); transform-origin: left;
-    transition: transform .45s cubic-bezier(.2,.8,.2,1);
-    opacity: .9;
-  }
-  .q input:checked ~ .txt { color: var(--muted); }
-  .q input:checked ~ .txt::after { transform: scaleX(1); }
+  .q input:checked ~ .txt { color: var(--muted); text-decoration-color: var(--accent); }
 
   .card.every { background: transparent; border-color: transparent; box-shadow: none; padding: 8px 4px 0; }
   .card.every .txt { font-size: 14.5px; color: var(--ink-soft); }
@@ -284,9 +278,9 @@
 
   /* begin / done / wait / all screens */
   .screen {
-    min-height: calc(100dvh - 40px);
-    display: flex; flex-direction: column; justify-content: center;
-    padding-bottom: 10vh;
+    min-height: 100dvh;
+    display: flex; flex-direction: column; justify-content: safe center;
+    padding: 72px 0 10vh;
   }
   .screen h1 {
     font-family: var(--serif);
@@ -673,12 +667,15 @@
     store.set(dayKey(n), JSON.stringify(arr));
   }
   const previewState = {};
+  // Preview helpers: ?day=N&done=1 shows the completed state, ?theme=dark forces a theme. Neither persists.
+  if (preview && params.has("done")) previewState[previewDay] = ["t", "b", "v", "e1", "e2", "e3", "e4"];
+  if (preview && (params.get("theme") === "dark" || params.get("theme") === "light")) root.setAttribute("data-theme", params.get("theme"));
+  let showAll = preview && params.has("all");
 
   // ------------------------------------------------------------
   // Rendering
   // ------------------------------------------------------------
   const app = document.getElementById("app");
-  let showAll = false;
 
   const svgCheck = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>`;
   const svgSun = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
@@ -717,7 +714,7 @@
         <div class="actions">
           ${isMonday
             ? `<button class="btn" data-begin="${toISO(today)}">Begin today</button>`
-            : `<button class="btn" data-begin="${toISO(monday)}">Begin ${fmtDate(monday).split(",")[0]} ${monday.getDate()}</button>
+            : `<button class="btn" data-begin="${toISO(monday)}">Begin ${monday.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</button>
                <button class="btn ghost" data-begin="${toISO(today)}">Begin today anyway</button>`}
         </div>
         <p class="fine">Miss a day and the sprint restarts at day 1. Illness or travel has a minimum quest, three times per sprint.</p>
@@ -802,7 +799,7 @@
     const weekend = i % 7 >= 5;
 
     const dateLine = preview
-      ? `Day ${day} of Sprint 1`
+      ? DOW[i % 7]
       : fmtDate(new Date(parseISO(store.get("startDate")).getTime() + i * DAY_MS));
 
     app.innerHTML = `
