@@ -1,0 +1,14 @@
+{
+  "name": "Seventy-Five Days",
+  "short_name": "75 Days",
+  "description": "One quest set a day. Seventy-five days. Nothing leaves this device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5efe4",
+  "theme_color": "#f5efe4",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
